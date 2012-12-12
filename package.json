@@ -1,0 +1,19 @@
+{
+  "name": "backbone-fetch-cache",
+  "version": "0.1.0",
+  "author": "Andy Appleton",
+  "description": "Caches calls to Backbone.[Model | Collection].fetch",
+  "scripts": {
+    "test": "grunt jasmine"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrappleton/backbone-fetch-cache.git"
+  },
+  "keywords": [ "backbone", "fetch", "cache" ],
+  "dependencies" : {},
+  "devDependencies": {
+    "grunt":  "~0.3",
+    "grunt-jasmine-runner":  "~0.6"
+  }
+}

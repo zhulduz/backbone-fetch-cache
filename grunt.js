@@ -13,9 +13,9 @@ module.exports = function(grunt) {
       specs : 'spec/**/*.spec.js',
       src: [
         // in order to satisfy dependencies
-        'spec/support/jquery*.js',
-        'spec/support/underscore.js',
-        'spec/support/backbone.js',
+        'spec/lib/jquery*.js',
+        'spec/lib/underscore.js',
+        'spec/lib/backbone.js',
         'backbone.fetch-cache.js'
       ],
       timeout : 5000,

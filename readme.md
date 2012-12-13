@@ -1,5 +1,7 @@
 # Backbone fetch cache
 
+[![Build Status](https://travis-ci.org/mrappleton/backbone-fetch-cache.png?branch=master)](https://travis-ci.org/mrappleton/backbone-fetch-cache)
+
 A Backbone plugin to cache calls to `Backbone.Model.prototype.fetch` and
 `Backbone.Model.prototype.fetch` in memory and `localStorage`.
 

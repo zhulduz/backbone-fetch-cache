@@ -4,7 +4,7 @@
   "author": "Andy Appleton",
   "description": "Caches calls to Backbone.[Model | Collection].fetch",
   "scripts": {
-    "test": "grunt jasmine"
+    "test": "grunt"
   },
   "repository": {
     "type": "git",

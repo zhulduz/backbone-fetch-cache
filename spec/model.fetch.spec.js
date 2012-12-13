@@ -26,17 +26,29 @@ describe('Backbone.Model', function() {
 
     it('keys cache items by URL',function() {
       Backbone.Model.setCache(this.model);
-      expect(Backbone.Model.attributeCache[this.model.url]).toEqual(this.model.toJSON());
+      expect(Backbone.Model.attributeCache[this.model.url].value).toEqual(this.model.toJSON());
     });
 
+    it('sets default expiry times for cache keys', function() {
+      var opts = { cache: true, expires: 1000 };
+      Backbone.Model.setCache(this.model, opts);
+      expect(Backbone.Model.attributeCache[this.model.url].expires)
+        .toEqual((new Date()).getTime() + (opts.expires * 1000));
+    });
 
+    it('sets expiry times for cache keys', function() {
+      var opts = { cache: true, expires: 1000 };
+      Backbone.Model.setCache(this.model, opts);
+      expect(Backbone.Model.attributeCache[this.model.url].expires)
+        .toEqual((new Date()).getTime() + (opts.expires * 1000));
+    });
   });
 
   describe('.prototype.fetch', function() {
     it('saves returned attributes to the attributeCache', function() {
       this.model.fetch();
       this.server.respond();
-      expect(Backbone.Model.attributeCache[this.model.url]).toEqual(this.model.toJSON());
+      expect(Backbone.Model.attributeCache[this.model.url].value).toEqual(this.model.toJSON());
     });
 
     it('returns data from the cache if cache: true is set', function() {
@@ -85,11 +97,12 @@ describe('Backbone.Model', function() {
 
     it('returns a promise with the correct context on a cache hit', function() {
       var cacheData = { cheese: 'pickle' },
-          spy = jasmine.createSpy('success');
+          spy = jasmine.createSpy('success'),
+          opts = { cache: true };
 
       Backbone.Model.attributeCache[this.model.url] = cacheData;
 
-      this.model.fetch({ cache: true }).done(spy);
+      this.model.fetch(opts).done(spy);
 
       expect(spy).toHaveBeenCalledWith(this.model);
     });

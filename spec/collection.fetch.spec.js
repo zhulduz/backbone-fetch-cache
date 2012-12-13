@@ -2,7 +2,19 @@ describe('Backbone.Collection', function() {
   beforeEach(function() {
     this.collection = new Backbone.Collection();
     this.collection.url = '/collection-cache-test';
-    // TODO: Use sinon to fake xhr requests
+
+    // Mock xhr resposes
+    this.server = sinon.fakeServer.create();
+    this.response = [{ sausages: 'bacon' }, { rice: 'peas' }];
+    this.server.respondWith('GET', this.collection.url, [
+      200,
+      { "Content-Type": "application/json" },
+      JSON.stringify(this.response)
+    ]);
+  });
+
+  afterEach(function() {
+    this.server.restore();
   });
 
   describe('.setCache', function() {
@@ -12,14 +24,9 @@ describe('Backbone.Collection', function() {
       expect(Backbone.Collection.attributeCache[this.collection.constructor.name]).toBeUndefined();
     });
 
-    it('separates cache keys by Class name', function() {
-      Backbone.Collection.setCache(this.collection);
-      expect(Backbone.Collection.attributeCache[this.collection.constructor.name]).toBeDefined();
-    });
-
     it('keys cache items by URL', function() {
       Backbone.Collection.setCache(this.collection);
-      expect(Backbone.Collection.attributeCache[this.collection.constructor.name][this.collection.url])
+      expect(Backbone.Collection.attributeCache[this.collection.url])
         .toEqual(this.collection.toJSON());
     });
 
@@ -28,22 +35,27 @@ describe('Backbone.Collection', function() {
   describe('.prototype.fetch', function() {
     it('saves returned attributes to the attributeCache', function() {
       this.collection.fetch();
-      expect(Backbone.Collection.attributeCache[this.collection.constructor.name][this.collection.url])
+      this.server.respond();
+      expect(Backbone.Collection.attributeCache[this.collection.url])
         .toEqual(this.collection.toJSON());
     });
 
     it('returns data from the cache if cache: true is set', function() {
       var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
-      Backbone.Collection.attributeCache[this.collection.constructor.name][this.collection.url] = cacheData;
+      Backbone.Collection.attributeCache[this.collection.url] = cacheData;
       this.collection.fetch({ cache: true });
       expect(this.collection.toJSON()).toEqual(cacheData);
     });
 
-    it('does not return cache data if cache: false is set', function() {
+    it('does not return cache data if cache: true is not set', function() {
       var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
-      Backbone.Collection.attributeCache[this.collection.constructor.name][this.collection.url] = cacheData;
-      this.collection.fetch({ cache: false });
+      Backbone.Collection.attributeCache[this.collection.url] = cacheData;
+
+      this.collection.fetch();
+      this.server.respond();
+
       expect(this.collection.toJSON()).not.toEqual(cacheData);
+      expect(this.collection.toJSON()).toEqual(this.response);
     });
 
     it('calls add according to options on a cache hit', function() {
@@ -51,7 +63,7 @@ describe('Backbone.Collection', function() {
           options = { cache: true, add: true };
 
       spyOn(this.collection, 'add');
-      Backbone.Collection.attributeCache[this.collection.constructor.name][this.collection.url] = cacheData;
+      Backbone.Collection.attributeCache[this.collection.url] = cacheData;
 
       this.collection.fetch(options);
 
@@ -63,7 +75,7 @@ describe('Backbone.Collection', function() {
           options = { cache: true, add: false };
 
       spyOn(this.collection, 'reset');
-      Backbone.Collection.attributeCache[this.collection.constructor.name][this.collection.url] = cacheData;
+      Backbone.Collection.attributeCache[this.collection.url] = cacheData;
 
       this.collection.fetch(options);
 
@@ -74,7 +86,7 @@ describe('Backbone.Collection', function() {
       var success = jasmine.createSpy('success'),
           cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
 
-      Backbone.Collection.attributeCache[this.collection.constructor.name][this.collection.url] = cacheData;
+      Backbone.Collection.attributeCache[this.collection.url] = cacheData;
 
       this.collection.fetch({ cache: true, success: success });
 
@@ -85,7 +97,7 @@ describe('Backbone.Collection', function() {
       var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
           promise;
 
-      Backbone.Collection.attributeCache[this.collection.constructor.name][this.collection.url] = cacheData;
+      Backbone.Collection.attributeCache[this.collection.url] = cacheData;
       promise = this.collection.fetch({ cache: true });
 
       expect(promise).toBeAPromise();

@@ -10,7 +10,7 @@ describe('Backbone.Model', function() {
       200,
       { "Content-Type": "application/json" },
       JSON.stringify(this.response)
-    ])
+    ]);
   });
 
   afterEach(function() {

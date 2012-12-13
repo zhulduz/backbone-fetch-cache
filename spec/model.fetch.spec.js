@@ -77,6 +77,12 @@ describe('Backbone.Model', function() {
       expect(promise).toBeResolved();
     });
 
+    it('returns an unfulfilled promise on a cache miss', function() {
+      var promise = this.model.fetch();
+      expect(promise).toBeAPromise();
+      expect(promise).toBeUnresolved();
+    });
+
     it('returns a promise with the correct context on a cache hit', function() {
       var cacheData = { cheese: 'pickle' },
           spy = jasmine.createSpy('success');

@@ -26,7 +26,7 @@
     }
 
     // Delegate to the actual fetch method and store the attibutes in the cache
-    superFetch.apply(this, arguments).done(
+    return superFetch.apply(this, arguments).done(
       _.bind(Backbone.Model.setCache, Backbone.Model, this)
     );
   };
@@ -60,7 +60,7 @@
     }
 
     // Delegate to the actual fetch method and store the attibutes in the cache
-    superFetch.apply(this, arguments).done(
+    return superFetch.apply(this, arguments).done(
       _.bind(Backbone.Collection.setCache, Backbone.Collection, this)
     );
   };

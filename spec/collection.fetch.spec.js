@@ -104,5 +104,22 @@ describe('Backbone.Collection', function() {
       expect(promise).toBeResolved();
     });
 
+    it('returns an unfulfilled promise on a cache miss', function() {
+      var promise = this.collection.fetch();
+      expect(promise).toBeAPromise();
+      expect(promise).toBeUnresolved();
+    });
+
+    it('returns a promise with the correct context on a cache hit', function() {
+      var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
+          spy = jasmine.createSpy('success');
+
+      Backbone.Collection.attributeCache[this.collection.url] = cacheData;
+
+      this.collection.fetch({ cache: true }).done(spy);
+
+      expect(spy).toHaveBeenCalledWith(this.collection);
+    });
+
   });
 });

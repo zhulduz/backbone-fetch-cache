@@ -19,6 +19,9 @@
       },
       toBeResolved: function(expected)  {
         return this.actual.state() === 'resolved';
+      },
+      toBeUnresolved: function(expected)  {
+        return this.actual.state() === 'pending';
       }
     });
   });

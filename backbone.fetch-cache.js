@@ -21,8 +21,13 @@
   Backbone.Model.prototype.fetch = function(opts) {
     opts = (opts || {});
     var url = _.isFunction(this.url) ? this.url() : this.url,
-        expired = Backbone.Model.attributeCache[url].expired < (new Date()).getTime(),
-        attributes = Backbone.Model.attributeCache[url].value;
+        data = Backbone.Model.attributeCache[url],
+        expired = false, attributes = false;
+
+    if (data) {
+      expired = data.expired < (new Date()).getTime();
+      attributes = data.value;
+    }
 
     if (!expired && opts.cache && attributes) {
       this.set(attributes, opts);

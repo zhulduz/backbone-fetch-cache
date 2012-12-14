@@ -38,12 +38,11 @@ myCollection.fetch({ cache: expires: false });
 ```
 
 ### `localStorage` (Not yet implemented)
-By default the cache is pesisted in localStorage (if available). Pass
-`localStorage: false` in the options hash to disable this:
+By default the cache is persisted in localStorage (if available). Set `Backbone.[Model | Collection].localStorageCache = false` to disable this:
 
 ```js
-myModel.fetch({ cache: true, localStorage: false });
-myCollection.fetch({ cache: true, localStorage: false });
+Backbone.Model.localStorageCache = false;
+Backbone.Collection.localStorageCache = false;
 ```
 
 ## Tests

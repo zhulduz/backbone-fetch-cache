@@ -52,6 +52,13 @@ describe('Backbone.Collection', function() {
         expect(Backbone.Collection.attributeCache[this.collection.url].expires)
           .toEqual((new Date()).getTime() + (opts.expires * 1000));
       });
+
+      it('is not set if expires: false is set', function() {
+        var opts = { cache: true, expires: false };
+        Backbone.Collection.setCache(this.collection, opts);
+        expect(Backbone.Collection.attributeCache[this.collection.url].expires)
+          .toEqual(false);
+      });
     });
   });
 
@@ -99,6 +106,18 @@ describe('Backbone.Collection', function() {
 
       expect(this.collection.toJSON()).not.toEqual(cacheData);
       expect(this.collection.toJSON()).toEqual(this.response);
+    });
+
+    it('returns cache data if the item has expires: false', function() {
+      var cacheData = [{ cheese: 'pickle' }];
+      Backbone.Collection.attributeCache[this.collection.url] = {
+        value: cacheData,
+        expires: false
+      };
+
+      this.collection.fetch({ cache: true });
+
+      expect(this.collection.toJSON()).toEqual(cacheData);
     });
 
     it('calls add according to options on a cache hit', function() {

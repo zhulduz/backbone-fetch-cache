@@ -52,6 +52,12 @@ describe('Backbone.Model', function() {
           .toEqual((new Date()).getTime() + (opts.expires * 1000));
       });
 
+      it('is not set if expires: false is set', function() {
+        var opts = { cache: true, expires: false };
+        Backbone.Model.setCache(this.model, opts);
+        expect(Backbone.Model.attributeCache[this.model.url].expires)
+          .toEqual(false);
+      });
     });
   });
 
@@ -98,6 +104,18 @@ describe('Backbone.Model', function() {
 
       expect(this.model.toJSON()).not.toEqual(cacheData);
       expect(this.model.toJSON()).toEqual(this.response);
+    });
+
+    it('returns cache data if the item has expires: false', function() {
+      var cacheData = { cheese: 'pickle' };
+      Backbone.Model.attributeCache[this.model.url] = {
+        value: cacheData,
+        expires: false
+      };
+
+      this.model.fetch({ cache: true });
+
+      expect(this.model.toJSON()).toEqual(cacheData);
     });
 
     it('calls success callback on a cache hit', function() {

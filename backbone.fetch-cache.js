@@ -6,12 +6,17 @@
 
   Backbone.Model.setCache = function(instance, opts) {
     opts = (opts || {});
-    var url = _.isFunction(instance.url) ? instance.url() : instance.url;
-   // need url to use as cache key so return if we can't get it
+    var url = _.isFunction(instance.url) ? instance.url() : instance.url,
+        expires = false;
+    // need url to use as cache key so return if we can't get it
     if (!url) { return; }
 
+    if (opts.expires !== false) {
+      expires = (new Date()).getTime() + ((opts.expires || 5 * 60) * 1000);
+    }
+
     this.attributeCache[url] = {
-      expires: (new Date()).getTime() + ((opts.expires || 5 * 60) * 1000),
+      expires: expires,
       value: instance.toJSON()
     };
   };
@@ -25,7 +30,8 @@
         expired = false, attributes = false;
 
     if (data) {
-      expired = data.expired < (new Date()).getTime();
+      expired = data.expires;
+      expired = expired && data.expires < (new Date()).getTime();
       attributes = data.value;
     }
 
@@ -52,12 +58,17 @@
   // Class methods
   Backbone.Collection.setCache = function(instance, opts) {
     opts = (opts || {});
-    var url = _.isFunction(instance.url) ? instance.url() : instance.url;
-   // need url to use as cache key so return if we can't get it
+    var url = _.isFunction(instance.url) ? instance.url() : instance.url,
+        expires = false;
+    // need url to use as cache key so return if we can't get it
     if (!url) { return; }
 
+    if (opts.expires !== false) {
+      expires = (new Date()).getTime() + ((opts.expires || 5 * 60) * 1000);
+    }
+
     this.attributeCache[url] = {
-      expires: (new Date()).getTime() + ((opts.expires || 5 * 60) * 1000),
+      expires: expires,
       value: instance.toJSON()
     };
   };
@@ -70,7 +81,8 @@
         expired = false, attributes = false;
 
     if (data) {
-      expired = data.expired < (new Date()).getTime();
+      expired = data.expires;
+      expired = expired && data.expires < (new Date()).getTime();
       attributes = data.value;
     }
 

@@ -23,14 +23,18 @@ myModel.fetch({ cache: true });
 myCollection.fetch({ cache: true });
 ```
 
-### `expires` (Not yet implemented)
+### `expires`
 
 Cache vales expire after 5 minutes by default. You can adjust this by passing
-`expires: <seconds>` to the fetch call:
+`expires: <seconds>` to the fetch call. Set to `false` to never expire:
 
 ```js
 myModel.fetch({ cache: true, expires: 60000 });
 myCollection.fetch({ cache: expires: 60000 });
+
+// These will never expire
+myModel.fetch({ cache: true, expires: false });
+myCollection.fetch({ cache: expires: false });
 ```
 
 ### `localStorage` (Not yet implemented)

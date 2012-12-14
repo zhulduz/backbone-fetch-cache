@@ -14,6 +14,7 @@ describe('Backbone.Model', function() {
   });
 
   afterEach(function() {
+    Backbone.Model.attributeCache = {};
     this.server.restore();
   });
 
@@ -26,29 +27,63 @@ describe('Backbone.Model', function() {
 
     it('keys cache items by URL',function() {
       Backbone.Model.setCache(this.model);
-      expect(Backbone.Model.attributeCache[this.model.url]).toEqual(this.model.toJSON());
+      expect(Backbone.Model.attributeCache[this.model.url].value).toEqual(this.model.toJSON());
     });
 
+    describe('cache expiry', function() {
+      beforeEach(function() {
+        this.clock = sinon.useFakeTimers();
+      });
 
+      afterEach(function() {
+        this.clock.restore();
+      });
+
+      it('sets default expiry times for cache keys', function() {
+        Backbone.Model.setCache(this.model, { cache: true });
+        expect(Backbone.Model.attributeCache[this.model.url].expires)
+          .toEqual((new Date()).getTime() + (5* 60 * 1000));
+      });
+
+      it('sets expiry times for cache keys', function() {
+        var opts = { cache: true, expires: 1000 };
+        Backbone.Model.setCache(this.model, opts);
+        expect(Backbone.Model.attributeCache[this.model.url].expires)
+          .toEqual((new Date()).getTime() + (opts.expires * 1000));
+      });
+
+      it('is not set if expires: false is set', function() {
+        var opts = { cache: true, expires: false };
+        Backbone.Model.setCache(this.model, opts);
+        expect(Backbone.Model.attributeCache[this.model.url].expires)
+          .toEqual(false);
+      });
+    });
   });
 
   describe('.prototype.fetch', function() {
     it('saves returned attributes to the attributeCache', function() {
       this.model.fetch();
       this.server.respond();
-      expect(Backbone.Model.attributeCache[this.model.url]).toEqual(this.model.toJSON());
+      expect(Backbone.Model.attributeCache[this.model.url].value).toEqual(this.model.toJSON());
     });
 
     it('returns data from the cache if cache: true is set', function() {
       var cacheData = { cheese: 'pickle' };
-      Backbone.Model.attributeCache[this.model.url] = cacheData;
+      Backbone.Model.attributeCache[this.model.url] = {
+        value: cacheData,
+        expires: (new Date()).getTime() + (5* 60 * 1000)
+      };
       this.model.fetch({ cache: true });
       expect(this.model.toJSON()).toEqual(cacheData);
     });
 
     it('does not return cache data if cache: true is not set', function() {
       var cacheData = { cheese: 'pickle' };
-      Backbone.Model.attributeCache[this.model.url] = cacheData;
+      Backbone.Model.attributeCache[this.model.url] = {
+        value: cacheData,
+        expires: (new Date()).getTime() + (5* 60 * 1000)
+      };
 
       this.model.fetch();
       this.server.respond();
@@ -57,10 +92,39 @@ describe('Backbone.Model', function() {
       expect(this.model.toJSON()).toEqual(this.response);
     });
 
+    it('does not return cache data if the cache item is stale', function() {
+      var cacheData = { cheese: 'pickle' };
+      Backbone.Model.attributeCache[this.model.url] = {
+        value: cacheData,
+        expires: (new Date()).getTime() - (5* 60 * 1000)
+      };
+
+      this.model.fetch();
+      this.server.respond();
+
+      expect(this.model.toJSON()).not.toEqual(cacheData);
+      expect(this.model.toJSON()).toEqual(this.response);
+    });
+
+    it('returns cache data if the item has expires: false', function() {
+      var cacheData = { cheese: 'pickle' };
+      Backbone.Model.attributeCache[this.model.url] = {
+        value: cacheData,
+        expires: false
+      };
+
+      this.model.fetch({ cache: true });
+
+      expect(this.model.toJSON()).toEqual(cacheData);
+    });
+
     it('calls success callback on a cache hit', function() {
       var success = jasmine.createSpy('success'),
           cacheData = { cheese: 'pickle' };
-      Backbone.Model.attributeCache[this.model.url] = cacheData;
+      Backbone.Model.attributeCache[this.model.url] = {
+        value: cacheData,
+        expires: (new Date()).getTime() + (5* 60 * 1000)
+      };
 
       this.model.fetch({ cache: true, success: success });
 
@@ -70,7 +134,10 @@ describe('Backbone.Model', function() {
     it('returns a fulfilled promise on a cache hit', function() {
       var cacheData = { cheese: 'pickle' },
           promise;
-      Backbone.Model.attributeCache[this.model.url] = cacheData;
+      Backbone.Model.attributeCache[this.model.url] = {
+        value: cacheData,
+        expires: (new Date()).getTime() + (5* 60 * 1000)
+      };
       promise = this.model.fetch({ cache: true });
 
       expect(promise).toBeAPromise();
@@ -85,11 +152,15 @@ describe('Backbone.Model', function() {
 
     it('returns a promise with the correct context on a cache hit', function() {
       var cacheData = { cheese: 'pickle' },
-          spy = jasmine.createSpy('success');
+          spy = jasmine.createSpy('success'),
+          opts = { cache: true };
 
-      Backbone.Model.attributeCache[this.model.url] = cacheData;
+      Backbone.Model.attributeCache[this.model.url] = {
+        value: cacheData,
+        expires: (new Date()).getTime() + (5* 60 * 1000)
+      };
 
-      this.model.fetch({ cache: true }).done(spy);
+      this.model.fetch(opts).done(spy);
 
       expect(spy).toHaveBeenCalledWith(this.model);
     });

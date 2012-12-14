@@ -68,6 +68,17 @@ describe('Backbone.Model', function() {
       expect(Backbone.Model.attributeCache[this.model.url].value).toEqual(this.model.toJSON());
     });
 
+    it('passes the instance and options through to setCache', function() {
+      var opts = { banana: 'bread' };
+      spyOn(Backbone.Model, 'setCache');
+
+      this.model.fetch(opts);
+      this.server.respond();
+
+      expect(Backbone.Model.setCache.calls[0].args[0]).toEqual(this.model);
+      expect(Backbone.Model.setCache.calls[0].args[1]).toEqual(opts);
+    });
+
     it('returns data from the cache if cache: true is set', function() {
       var cacheData = { cheese: 'pickle' };
       Backbone.Model.attributeCache[this.model.url] = {

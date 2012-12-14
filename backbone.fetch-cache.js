@@ -44,7 +44,7 @@
 
     // Delegate to the actual fetch method and store the attibutes in the cache
     return superFetch.apply(this, arguments).done(
-      _.bind(Backbone.Model.setCache, Backbone.Model, this)
+      _.bind(Backbone.Model.setCache, Backbone.Model, this, opts)
     );
   };
 })();
@@ -95,7 +95,7 @@
 
     // Delegate to the actual fetch method and store the attibutes in the cache
     return superFetch.apply(this, arguments).done(
-      _.bind(Backbone.Collection.setCache, Backbone.Collection, this)
+      _.bind(Backbone.Collection.setCache, Backbone.Collection, this, opts)
     );
   };
 })();

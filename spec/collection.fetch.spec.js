@@ -70,6 +70,17 @@ describe('Backbone.Collection', function() {
         .toEqual(this.collection.toJSON());
     });
 
+    it('passes the instance and options through to setCache', function() {
+      var opts = { banana: 'bread' };
+      spyOn(Backbone.Collection, 'setCache');
+
+      this.collection.fetch(opts);
+      this.server.respond();
+
+      expect(Backbone.Collection.setCache.calls[0].args[0]).toEqual(this.collection);
+      expect(Backbone.Collection.setCache.calls[0].args[1]).toEqual(opts);
+    });
+
     it('returns data from the cache if cache: true is set', function() {
       var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
       Backbone.Collection.attributeCache[this.collection.url] = {

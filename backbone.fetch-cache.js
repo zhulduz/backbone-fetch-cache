@@ -1,6 +1,7 @@
 // Backbone.Model
-(function() {
-  var superFetch = Backbone.Model.prototype.fetch;
+(function(undef) {
+  var superFetch = Backbone.Model.prototype.fetch,
+      supportLocalStorage = typeof window.localStorage !== 'undefined';
 
   Backbone.Model.attributeCache = {};
 
@@ -19,6 +20,17 @@
       expires: expires,
       value: instance.toJSON()
     };
+    this.setLocalStorage();
+  };
+
+  Backbone.Model.setLocalStorage = function() {
+    if (!supportLocalStorage) { return; }
+    localStorage.setItem('modelCache', JSON.stringify(Backbone.Model.attributeCache));
+  };
+
+  Backbone.Model.getLocalStorage = function() {
+    if (!supportLocalStorage) { return; }
+    Backbone.Model.attributeCache = JSON.parse(localStorage.getItem('modelCache')) || {};
   };
 
   // Return cached model attributes if opts.cache == true and the data has
@@ -47,11 +59,15 @@
       _.bind(Backbone.Model.setCache, Backbone.Model, this, opts)
     );
   };
+
+  // Prime the cache from localStorage on initialization
+  Backbone.Model.getLocalStorage();
 })();
 
 // Backbone.Collection
 (function() {
-  var superFetch = Backbone.Collection.prototype.fetch;
+  var superFetch = Backbone.Collection.prototype.fetch,
+        supportLocalStorage = typeof window.localStorage !== 'undefined';
 
   Backbone.Collection.attributeCache = {};
 
@@ -71,6 +87,17 @@
       expires: expires,
       value: instance.toJSON()
     };
+    this.setLocalStorage();
+  };
+
+  Backbone.Collection.setLocalStorage = function() {
+    if (!supportLocalStorage) { return; }
+    localStorage.setItem('collectionCache', JSON.stringify(Backbone.Collection.attributeCache));
+  };
+
+  Backbone.Collection.getLocalStorage = function() {
+    if (!supportLocalStorage) { return; }
+    Backbone.Collection.attributeCache = JSON.parse(localStorage.getItem('collectionCache')) || {};
   };
 
   // Instance methods
@@ -98,4 +125,7 @@
       _.bind(Backbone.Collection.setCache, Backbone.Collection, this, opts)
     );
   };
+
+  // Prime the cache from localStorage on initialization
+  Backbone.Collection.getLocalStorage();
 })();

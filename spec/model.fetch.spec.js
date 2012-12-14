@@ -15,6 +15,7 @@ describe('Backbone.Model', function() {
 
   afterEach(function() {
     Backbone.Model.attributeCache = {};
+    localStorage.clear('modelCache');
     this.server.restore();
   });
 
@@ -28,6 +29,12 @@ describe('Backbone.Model', function() {
     it('keys cache items by URL',function() {
       Backbone.Model.setCache(this.model);
       expect(Backbone.Model.attributeCache[this.model.url].value).toEqual(this.model.toJSON());
+    });
+
+    it('calls setLocalStorage', function() {
+      spyOn(Backbone.Model, 'setLocalStorage');
+      Backbone.Model.setCache(this.model);
+      expect(Backbone.Model.setLocalStorage).toHaveBeenCalled();
     });
 
     describe('cache expiry', function() {
@@ -58,6 +65,29 @@ describe('Backbone.Model', function() {
         expect(Backbone.Model.attributeCache[this.model.url].expires)
           .toEqual(false);
       });
+    });
+  });
+
+  describe('.setLocalStorage', function() {
+    it('puts the cache into localStorage', function() {
+      var cache = Backbone.Model.attributeCache = {
+        '/url1': { expires: false, value: { bacon: 'sandwich' } },
+        '/url2': { expires: false, value: { egg: 'roll' } }
+      };
+      Backbone.Model.setLocalStorage();
+      expect(localStorage.getItem('modelCache')).toEqual(JSON.stringify(cache));
+    });
+  });
+
+  describe('.getLocalStorage', function() {
+    it('primes the cache from localStorage', function() {
+      var cache = {
+        '/url1': { expires: false, value: { bacon: 'sandwich' } },
+        '/url2': { expires: false, value: { egg: 'roll' } }
+      };
+      localStorage.setItem('modelCache', JSON.stringify(cache));
+      Backbone.Model.getLocalStorage();
+      expect(Backbone.Model.attributeCache).toEqual(cache);
     });
   });
 

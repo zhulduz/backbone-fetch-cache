@@ -12,7 +12,7 @@ module.exports = function(grunt) {
         ' */'
     },
     lint: {
-      files: ['grunt.js', '*.js', 'spec/**/*.spec.js']
+      files: ['grunt.js', 'backbone.fetch-cache.js', 'spec/**/*.spec.js']
     },
     jasmine: {
       helpers: [

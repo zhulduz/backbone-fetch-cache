@@ -37,7 +37,7 @@ myModel.fetch({ cache: true, expires: false });
 myCollection.fetch({ cache: expires: false });
 ```
 
-### `localStorage` (Not yet implemented)
+### `localStorage`
 By default the cache is persisted in localStorage (if available). Set `Backbone.[Model | Collection].localStorageCache = false` to disable this:
 
 ```js

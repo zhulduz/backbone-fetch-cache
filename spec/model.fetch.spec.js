@@ -14,6 +14,7 @@ describe('Backbone.Model', function() {
   });
 
   afterEach(function() {
+    Backbone.Model.attributeCache = {};
     this.server.restore();
   });
 
@@ -29,17 +30,28 @@ describe('Backbone.Model', function() {
       expect(Backbone.Model.attributeCache[this.model.url].value).toEqual(this.model.toJSON());
     });
 
-    it('sets default expiry times for cache keys', function() {
-      Backbone.Model.setCache(this.model, { cache: true });
-      expect(Backbone.Model.attributeCache[this.model.url].expires)
-        .toEqual((new Date()).getTime() + (5* 60 * 1000));
-    });
+    describe('cache expiry', function() {
+      beforeEach(function() {
+        this.clock = sinon.useFakeTimers();
+      });
 
-    it('sets expiry times for cache keys', function() {
-      var opts = { cache: true, expires: 1000 };
-      Backbone.Model.setCache(this.model, opts);
-      expect(Backbone.Model.attributeCache[this.model.url].expires)
-        .toEqual((new Date()).getTime() + (opts.expires * 1000));
+      afterEach(function() {
+        this.clock.restore();
+      });
+
+      it('sets default expiry times for cache keys', function() {
+        Backbone.Model.setCache(this.model, { cache: true });
+        expect(Backbone.Model.attributeCache[this.model.url].expires)
+          .toEqual((new Date()).getTime() + (5* 60 * 1000));
+      });
+
+      it('sets expiry times for cache keys', function() {
+        var opts = { cache: true, expires: 1000 };
+        Backbone.Model.setCache(this.model, opts);
+        expect(Backbone.Model.attributeCache[this.model.url].expires)
+          .toEqual((new Date()).getTime() + (opts.expires * 1000));
+      });
+
     });
   });
 
@@ -86,7 +98,6 @@ describe('Backbone.Model', function() {
 
       expect(this.model.toJSON()).not.toEqual(cacheData);
       expect(this.model.toJSON()).toEqual(this.response);
-
     });
 
     it('calls success callback on a cache hit', function() {

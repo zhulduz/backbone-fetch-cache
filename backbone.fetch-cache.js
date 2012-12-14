@@ -1,3 +1,8 @@
+/*!
+  backbone.fetch-cache v0.1.0
+  by Andy Appleton - https://github.com/mrappleton/backbone-fetch-cache.git
+ */
+
 // Backbone.Model
 (function(undef) {
   var superFetch = Backbone.Model.prototype.fetch,

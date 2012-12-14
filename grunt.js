@@ -3,6 +3,14 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
+    pkg: '<json:package.json>',
+    meta: {
+      banner: "/*!\n" +
+        '  <%= pkg.name %> v<%= pkg.version %> ' +
+        "(<%= grunt.template.today('yyyy-mm-dd') %>)\n" +
+        "  by <%= pkg.author %> - <%= pkg.repository.url %>\n" +
+        ' */'
+    },
     lint: {
       files: ['grunt.js', '*.js', 'spec/**/*.spec.js']
     },
@@ -20,6 +28,12 @@ module.exports = function(grunt) {
       ],
       timeout : 5000,
       phantomjs : { 'ignore-ssl-errors' : true }
+    },
+    min: {
+      dist: {
+        src: ['<banner>', 'backbone.fetch-cache.js'],
+        dest: 'backbone.fetch-cache.min.js'
+      }
     },
     watch: {
       files: '<config:lint.files>',

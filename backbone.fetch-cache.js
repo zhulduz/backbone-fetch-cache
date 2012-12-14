@@ -4,6 +4,9 @@
       supportLocalStorage = typeof window.localStorage !== 'undefined';
 
   Backbone.Model.attributeCache = {};
+  if (typeof Backbone.Model.localStorageCache === 'undefined') {
+    Backbone.Model.localStorageCache = true;
+  }
 
   Backbone.Model.setCache = function(instance, opts) {
     opts = (opts || {});
@@ -24,12 +27,12 @@
   };
 
   Backbone.Model.setLocalStorage = function() {
-    if (!supportLocalStorage) { return; }
+    if (!supportLocalStorage || !Backbone.Model.localStorageCache) { return; }
     localStorage.setItem('modelCache', JSON.stringify(Backbone.Model.attributeCache));
   };
 
   Backbone.Model.getLocalStorage = function() {
-    if (!supportLocalStorage) { return; }
+    if (!supportLocalStorage || !Backbone.Model.localStorageCache) { return; }
     Backbone.Model.attributeCache = JSON.parse(localStorage.getItem('modelCache')) || {};
   };
 
@@ -70,6 +73,9 @@
         supportLocalStorage = typeof window.localStorage !== 'undefined';
 
   Backbone.Collection.attributeCache = {};
+  if (typeof Backbone.Collection.localStorageCache === 'undefined') {
+    Backbone.Collection.localStorageCache = true;
+  }
 
   // Class methods
   Backbone.Collection.setCache = function(instance, opts) {
@@ -91,12 +97,12 @@
   };
 
   Backbone.Collection.setLocalStorage = function() {
-    if (!supportLocalStorage) { return; }
+    if (!supportLocalStorage || !Backbone.Collection.localStorageCache) { return; }
     localStorage.setItem('collectionCache', JSON.stringify(Backbone.Collection.attributeCache));
   };
 
   Backbone.Collection.getLocalStorage = function() {
-    if (!supportLocalStorage) { return; }
+    if (!supportLocalStorage || !Backbone.Collection.localStorageCache) { return; }
     Backbone.Collection.attributeCache = JSON.parse(localStorage.getItem('collectionCache')) || {};
   };
 

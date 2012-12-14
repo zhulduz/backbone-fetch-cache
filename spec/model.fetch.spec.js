@@ -77,7 +77,21 @@ describe('Backbone.Model', function() {
       Backbone.Model.setLocalStorage();
       expect(localStorage.getItem('modelCache')).toEqual(JSON.stringify(cache));
     });
+
+    it('does not put the cache into localStorage if localStorageCache = false', function() {
+      var cache = Backbone.Model.attributeCache = {
+        '/url1': { expires: false, value: { bacon: 'sandwich' } },
+        '/url2': { expires: false, value: { egg: 'roll' } }
+      };
+      Backbone.Model.localStorageCache = false;
+      Backbone.Model.setLocalStorage();
+
+      expect(localStorage.getItem('modelCache')).toEqual(null);
+
+      Backbone.Model.localStorageCache = true; // restore
+    });
   });
+
 
   describe('.getLocalStorage', function() {
     it('primes the cache from localStorage', function() {

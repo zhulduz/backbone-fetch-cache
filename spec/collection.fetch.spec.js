@@ -78,6 +78,19 @@ describe('Backbone.Collection', function() {
       Backbone.Collection.setLocalStorage();
       expect(localStorage.getItem('collectionCache')).toEqual(JSON.stringify(cache));
     });
+
+    it('does not put the cache into localStorage if localStorageCache = false', function() {
+      var cache = Backbone.Collection.attributeCache = {
+        '/url1': { expires: false, value: { bacon: 'sandwich' } },
+        '/url2': { expires: false, value: { egg: 'roll' } }
+      };
+      Backbone.Collection.localStorageCache = false;
+      Backbone.Collection.setLocalStorage();
+
+      expect(localStorage.getItem('collectionCache')).toEqual(null);
+
+      Backbone.Collection.localStorageCache = true; // restore
+    });
   });
 
   describe('.getLocalStorage', function() {
@@ -89,6 +102,23 @@ describe('Backbone.Collection', function() {
       localStorage.setItem('collectionCache', JSON.stringify(cache));
       Backbone.Collection.getLocalStorage();
       expect(Backbone.Collection.attributeCache).toEqual(cache);
+    });
+
+    it('does not prime the cache from localStorage if localStorageCache = false', function() {
+      var cache = Backbone.Collection.attributeCache = {
+        '/url1': [{ expires: false, value: { bacon: 'sandwich' } }],
+        '/url2': [{ expires: false, value: { egg: 'roll' } }]
+      };
+      localStorage.setItem('collectionCache', JSON.stringify(cache));
+
+      Backbone.Collection.attributeCache = {};
+      Backbone.Collection.localStorageCache = false;
+
+      Backbone.Collection.getLocalStorage();
+
+      expect(Backbone.Collection.attributeCache).toEqual({});
+
+      Backbone.Collection.localStorageCache = true; // restore
     });
   });
 

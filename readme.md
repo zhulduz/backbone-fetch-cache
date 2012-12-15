@@ -5,6 +5,14 @@
 A Backbone plugin to cache calls to `Backbone.Model.prototype.fetch` and
 `Backbone.Model.prototype.fetch` in memory and `localStorage`.
 
+## How it works
+This plugin intercepts calls to `fetch` and stores the results in a cache object (`Backbone.fetchCache._cache`). If fetch is called with `{ cache: true }` in the options and the URL has already been cached the AJAX call will be skipped.
+
+The local cache is persisted in `localStorage` if available for faster initial page loads.
+
+## What's wrong with browser caching for AJAX responses?
+Nothing. This plugin is primarily for working with an API where you don't have control over response cache headers.
+
 ## Usage
 Add the script to the page after backbone.js has been included:
 
@@ -15,8 +23,7 @@ Add the script to the page after backbone.js has been included:
 
 ## Options
 ### `cache`
-Whenever you make a call to `modelInstance.fetch` or `collectionInstance.fetch`
-it can be cached by passing `cache: true` in the options hash:
+Calls to `modelInstance.fetch` or `collectionInstance.fetch` will be fulfilled from the cache (if possible) when `cache: true` is set in the options hash:
 
 ```js
 myModel.fetch({ cache: true });
@@ -38,10 +45,10 @@ myCollection.fetch({ cache: expires: false });
 ```
 
 ### `localStorage`
-By default the cache is persisted in localStorage (if available). Set `Backbone.fetchCache.localStorageCache = false` to disable this:
+By default the cache is persisted in localStorage (if available). Set `Backbone.fetchCache.localStorage = false` to disable this:
 
 ```js
-Backbone.fetchCache.localStorageCache = false;
+Backbone.fetchCache.localStorage = false;
 ```
 
 ## Tests

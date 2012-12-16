@@ -68,7 +68,7 @@
       return ( new $.Deferred() ).resolve(this);
     }
 
-    // Delegate to the actual fetch method and store the attibutes in the cache
+    // Delegate to the actual fetch method and store the attributes in the cache
     return modelFetch.apply(this, arguments).done(
       _.bind(Backbone.fetchCache.setCache, null, this, opts)
     );
@@ -94,7 +94,7 @@
       return ( new $.Deferred() ).resolve(this);
     }
 
-    // Delegate to the actual fetch method and store the attibutes in the cache
+    // Delegate to the actual fetch method and store the attributes in the cache
     return collectionFetch.apply(this, arguments).done(
       _.bind(Backbone.fetchCache.setCache, null, this, opts)
     );

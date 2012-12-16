@@ -64,7 +64,7 @@
     if (!expired && opts.cache && attributes) {
       this.set(attributes, opts);
       if (_.isFunction(opts.success)) { opts.success(this); }
-      // Mimic actual fetch behaviour buy returning a fulfulled promise
+      // Mimic actual fetch behaviour buy returning a fulfilled promise
       return ( new $.Deferred() ).resolve(this);
     }
 
@@ -90,7 +90,7 @@
     if (!expired && opts.cache && attributes) {
       this[opts.add ? 'add' : 'reset'](this.parse(attributes), opts);
       if (_.isFunction(opts.success)) { opts.success(this); }
-      // Mimic actual fetch behaviour buy returning a fulfulled promise
+      // Mimic actual fetch behaviour buy returning a fulfilled promise
       return ( new $.Deferred() ).resolve(this);
     }
 

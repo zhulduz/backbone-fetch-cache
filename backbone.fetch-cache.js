@@ -53,7 +53,8 @@
     var url = _.isFunction(this.url) ? this.url() : this.url,
         data = Backbone.fetchCache._cache[url],
         expired = false,
-        attributes = false;
+        attributes = false,
+        promise = new $.Deferred();
 
     if (data) {
       expired = data.expires;
@@ -61,17 +62,29 @@
       attributes = data.value;
     }
 
-    if (!expired && opts.cache && attributes) {
+    if (!expired && (opts.cache || opts.prefill) && attributes) {
       this.set(attributes, opts);
-      if (_.isFunction(opts.success)) { opts.success(this); }
-      // Mimic actual fetch behaviour buy returning a fulfilled promise
-      return ( new $.Deferred() ).resolve(this);
+      if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this); }
+
+      // Notify progress if we're still waiting for an AJAX call to happen...
+      if (opts.prefill) { promise.notify(this); }
+      // ...finish and return if we're not
+      else {
+        if (_.isFunction(opts.success)) { opts.success(this); }
+        // Mimic actual fetch behaviour buy returning a fulfilled promise
+        return promise.resolve(this);
+      }
     }
 
     // Delegate to the actual fetch method and store the attributes in the cache
-    return modelFetch.apply(this, arguments).done(
-      _.bind(Backbone.fetchCache.setCache, null, this, opts)
-    );
+    modelFetch.apply(this, arguments)
+      // resolve the returned promise when the AJAX call completes
+      .done( _.bind(promise.resolve, this, this) )
+      // Set the new data in the cache
+      .done( _.bind(Backbone.fetchCache.setCache, null, this, opts) );
+
+    // return a promise which provides the same methods as a jqXHR object
+    return promise;
   };
 
   Backbone.Collection.prototype.fetch = function(opts) {
@@ -79,7 +92,8 @@
     var url = _.isFunction(this.url) ? this.url() : this.url,
         data = Backbone.fetchCache._cache[url],
         expired = false,
-        attributes = false;
+        attributes = false,
+        promise = new $.Deferred();
 
     if (data) {
       expired = data.expires;
@@ -87,17 +101,29 @@
       attributes = data.value;
     }
 
-    if (!expired && opts.cache && attributes) {
+    if (!expired && (opts.cache || opts.prefill) && attributes) {
       this[opts.add ? 'add' : 'reset'](this.parse(attributes), opts);
-      if (_.isFunction(opts.success)) { opts.success(this); }
-      // Mimic actual fetch behaviour buy returning a fulfilled promise
-      return ( new $.Deferred() ).resolve(this);
+      if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this); }
+
+      // Notify progress if we're still waiting for an AJAX call to happen...
+      if (opts.prefill) { promise.notify(this); }
+      // ...finish and return if we're not
+      else {
+        if (_.isFunction(opts.success)) { opts.success(this); }
+        // Mimic actual fetch behaviour buy returning a fulfilled promise
+        return promise.resolve(this);
+      }
     }
 
     // Delegate to the actual fetch method and store the attributes in the cache
-    return collectionFetch.apply(this, arguments).done(
-      _.bind(Backbone.fetchCache.setCache, null, this, opts)
-    );
+    collectionFetch.apply(this, arguments)
+      // resolve the returned promise when the AJAX call completes
+      .done( _.bind(promise.resolve, this, this) )
+      // Set the new data in the cache
+      .done( _.bind(Backbone.fetchCache.setCache, null, this, opts) );
+
+    // return a promise which provides the same methods as a jqXHR object
+    return promise;
   };
 
   // Prime the cache from localStorage on initialization

@@ -27,7 +27,6 @@ describe('Backbone.fetchCache', function() {
     this.server.restore();
   });
 
-
   describe('.setCache', function() {
     it('noops if the instance does not have a url', function() {
       this.model.url = null;
@@ -229,6 +228,61 @@ describe('Backbone.fetchCache', function() {
 
         expect(spy).toHaveBeenCalledWith(this.model);
       });
+
+      describe('with prefill: true option', function() {
+        beforeEach(function(){
+          this.cacheData = { cheese: 'pickle' };
+          Backbone.fetchCache._cache[this.model.url] = {
+            value: this.cacheData,
+            expires: (new Date()).getTime() + (5* 60 * 1000)
+          };
+        });
+
+        it('sets cache data and makes an xhr request', function() {
+          this.model.fetch({ prefill: true });
+          expect(this.model.toJSON()).toEqual(this.cacheData);
+
+          this.server.respond();
+
+          for (var key in this.modelResponse) {
+            if (this.modelResponse.hasOwnProperty(key)) {
+              expect(this.model.toJSON()[key]).toEqual(this.modelResponse[key]);
+            }
+          }
+        });
+
+        it('calls the prefillSuccess and success callbacks in order', function() {
+          var prefillSuccess = jasmine.createSpy('prefillSuccess'),
+              success = jasmine.createSpy('success');
+
+          this.model.fetch({
+            prefill: true,
+            success: success,
+            prefillSuccess: prefillSuccess
+          });
+
+          expect(prefillSuccess).toHaveBeenCalledWith(this.model);
+          expect(success).not.toHaveBeenCalled();
+
+          this.server.respond();
+          expect(success).toHaveBeenCalledWith(this.model, this.modelResponse);
+        });
+
+        it('triggers progress on the promise on cache hit', function() {
+          var progress = jasmine.createSpy('progeress');
+          this.model.fetch({ prefill: true }).progress(progress);
+          expect(progress).toHaveBeenCalledWith(this.model);
+        });
+
+        it('fulfills the promise on AJAX success', function() {
+          var success = jasmine.createSpy('success');
+          this.model.fetch({ prefill: true }).done(success);
+          this.server.respond();
+
+          expect(success.calls[0].args[0]).toEqual(this.model);
+          expect(success.calls[0].args[1]).toEqual(this.modelResponse);
+        });
+      });
     });
   });
 
@@ -378,6 +432,57 @@ describe('Backbone.fetchCache', function() {
         this.collection.fetch({ cache: true }).done(spy);
 
         expect(spy).toHaveBeenCalledWith(this.collection);
+      });
+
+      describe('with prefill: true option', function() {
+        beforeEach(function(){
+          this.cacheData = [{ cheese: 'pickle' }];
+          Backbone.fetchCache._cache[this.collection.url] = {
+            value: this.cacheData,
+            expires: (new Date()).getTime() + (5* 60 * 1000)
+          };
+        });
+
+        it('sets cache data and makes an xhr request', function() {
+          this.collection.fetch({ prefill: true });
+          expect(this.collection.toJSON()).toEqual(this.cacheData);
+
+          this.server.respond();
+
+          expect(this.collection.toJSON()).toEqual(this.collectionResponse);
+        });
+
+        it('calls the prefillSuccess and success callbacks in order', function() {
+          var prefillSuccess = jasmine.createSpy('prefillSuccess'),
+              success = jasmine.createSpy('success');
+
+          this.collection.fetch({
+            prefill: true,
+            success: success,
+            prefillSuccess: prefillSuccess
+          });
+
+          expect(prefillSuccess).toHaveBeenCalledWith(this.collection);
+          expect(success).not.toHaveBeenCalled();
+
+          this.server.respond();
+          expect(success).toHaveBeenCalledWith(this.collection, this.collectionResponse);
+        });
+
+        it('triggers progress on the promise on cache hit', function() {
+          var progress = jasmine.createSpy('progeress');
+          this.collection.fetch({ prefill: true }).progress(progress);
+          expect(progress).toHaveBeenCalledWith(this.collection);
+        });
+
+        it('fulfills the promise on AJAX success', function() {
+          var success = jasmine.createSpy('success');
+          this.collection.fetch({ prefill: true }).done(success);
+          this.server.respond();
+
+          expect(success.calls[0].args[0]).toEqual(this.collection);
+          expect(success.calls[0].args[1]).toEqual(this.collectionResponse);
+        });
       });
     });
   });

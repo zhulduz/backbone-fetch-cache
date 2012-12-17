@@ -108,3 +108,6 @@ The default grunt task runs tests and lints the code.
 ```
 $ grunt
 ```
+
+## Changelog
+- v0.1.1: Add `prefetch option`.

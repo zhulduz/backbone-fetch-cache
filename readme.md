@@ -10,6 +10,8 @@ This plugin intercepts calls to `fetch` and stores the results in a cache object
 
 The local cache is persisted in `localStorage` if available for faster initial page loads.
 
+The `prefill` option allows for models and collections to be filled with cache data just until the `fetch` operations are complete -- a nice way to make the app feel snappy on slower connections.
+
 ## What's wrong with browser caching for AJAX responses?
 Nothing. This plugin is primarily for working with an API where you don't have control over response cache headers.
 
@@ -33,7 +35,7 @@ myCollection.fetch({ cache: true });
 <hr />
 
 ### `prefill`
-This option allows the model/collection to be populated from the cache immediately and then be updated once the call to `fetch` has completed. The initial cache hit calls the `prefillSuccess` callback and then the AJAX success/error callbacks are called as normal when the request is complete. This allows the page to render something immediately and then update it after the request completes.
+This option allows the model/collection to be populated from the cache immediately and then be updated once the call to `fetch` has completed. The initial cache hit calls the `prefillSuccess` callback and then the AJAX success/error callbacks are called as normal when the request is complete. This allows the page to render something immediately and then update it after the request completes. (Note: the `prefillSuccess` callback _will not fire_ if the data is not found in the cache.)
 
 ```js
 myModel.fetch({
@@ -49,7 +51,7 @@ myCollection.fetch({
 });
 ```
 
-This option can be used with the promises interface like so:
+This option can be used with the promises interface like so (note: the `progress` event _will not fire_ if the data is not found in the cache.):
 
 ```js
 var modelPromise = myModel.fetch({ prefill: true });

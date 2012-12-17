@@ -30,14 +30,14 @@ describe('Backbone.fetchCache', function() {
   describe('.setCache', function() {
     it('noops if the instance does not have a url', function() {
       this.model.url = null;
-      Backbone.fetchCache.setCache(this.model);
+      Backbone.fetchCache.setCache(this.model, null, this.modelResponse);
       expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
     });
 
     it('keys cache items by URL',function() {
-      Backbone.fetchCache.setCache(this.model);
+      Backbone.fetchCache.setCache(this.model, null, this.modelResponse);
       expect(Backbone.fetchCache._cache[this.model.url].value)
-        .toEqual(this.model.toJSON());
+        .toEqual(this.modelResponse);
     });
 
     it('calls setLocalStorage', function() {
@@ -56,21 +56,21 @@ describe('Backbone.fetchCache', function() {
       });
 
       it('sets default expiry times for cache keys', function() {
-        Backbone.fetchCache.setCache(this.model, { cache: true });
+        Backbone.fetchCache.setCache(this.model, { cache: true }, this.modelResponse);
         expect(Backbone.fetchCache._cache[this.model.url].expires)
           .toEqual((new Date()).getTime() + (5* 60 * 1000));
       });
 
       it('sets expiry times for cache keys', function() {
         var opts = { cache: true, expires: 1000 };
-        Backbone.fetchCache.setCache(this.model, opts);
+        Backbone.fetchCache.setCache(this.model, opts, this.modelResponse);
         expect(Backbone.fetchCache._cache[this.model.url].expires)
           .toEqual((new Date()).getTime() + (opts.expires * 1000));
       });
 
       it('is not set if expires: false is set', function() {
         var opts = { cache: true, expires: false };
-        Backbone.fetchCache.setCache(this.model, opts);
+        Backbone.fetchCache.setCache(this.model, opts, this.modelResponse);
         expect(Backbone.fetchCache._cache[this.model.url].expires)
           .toEqual(false);
       });

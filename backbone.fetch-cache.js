@@ -17,7 +17,7 @@
   }
 
   // Shared methods
-  function setCache(instance, opts) {
+  function setCache(instance, opts, attrs) {
     opts = (opts || {});
     var url = _.isFunction(instance.url) ? instance.url() : instance.url,
         expires = false;
@@ -31,7 +31,7 @@
 
     Backbone.fetchCache._cache[url] = {
       expires: expires,
-      value: instance.toJSON()
+      value: attrs
     };
 
     Backbone.fetchCache.setLocalStorage();

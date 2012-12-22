@@ -265,7 +265,9 @@ describe('Backbone.fetchCache', function() {
           expect(success).not.toHaveBeenCalled();
 
           this.server.respond();
-          expect(success).toHaveBeenCalledWith(this.model, this.modelResponse);
+
+          expect(success.calls[0].args[0]).toEqual(this.model);
+          expect(success.calls[0].args[1]).toEqual(this.modelResponse);
         });
 
         it('triggers progress on the promise on cache hit', function() {
@@ -466,7 +468,8 @@ describe('Backbone.fetchCache', function() {
           expect(success).not.toHaveBeenCalled();
 
           this.server.respond();
-          expect(success).toHaveBeenCalledWith(this.collection, this.collectionResponse);
+          expect(success.calls[0].args[0]).toEqual(this.collection);
+          expect(success.calls[0].args[1]).toEqual(this.collectionResponse);
         });
 
         it('triggers progress on the promise on cache hit', function() {

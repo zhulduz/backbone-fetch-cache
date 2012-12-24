@@ -133,4 +133,8 @@
   Backbone.fetchCache.setCache = setCache;
   Backbone.fetchCache.setLocalStorage = setLocalStorage;
   Backbone.fetchCache.getLocalStorage = getLocalStorage;
+
+  if (typeof define === 'function' && define.amd) {
+    define(function(){ return Backbone; });
+  }
 })();

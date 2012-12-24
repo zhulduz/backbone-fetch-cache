@@ -57,6 +57,7 @@ module.exports = function(grunt) {
         $: true,
         _: true,
         Backbone: true,
+        define: true,
         it: true,
         describe: true,
         beforeEach: true,

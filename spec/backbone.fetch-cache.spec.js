@@ -27,6 +27,22 @@ describe('Backbone.fetchCache', function() {
     this.server.restore();
   });
 
+  describe('AMD', function() {
+    it('defines an AMD module if supported', function() {
+      var s = document.createElement('script');
+      s.src = '/backbone.fetch-cache.js';
+
+      window.define = jasmine.createSpy('AMD define');
+      window.define.amd = true;
+
+      s.onload = function(){
+        expect(window.define).toHaveBeenCalled();
+      };
+
+      document.body.appendChild(s);
+    });
+  });
+
   describe('.setCache', function() {
     it('noops if the instance does not have a url', function() {
       this.model.url = null;

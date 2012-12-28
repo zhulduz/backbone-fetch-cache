@@ -72,7 +72,7 @@ Cache vales expire after 5 minutes by default. You can adjust this by passing
 
 ```js
 myModel.fetch({ cache: true, expires: 60000 });
-myCollection.fetch({ cache: expires: 60000 });
+myCollection.fetch({ cache: true, expires: 60000 });
 
 // These will never expire
 myModel.fetch({ cache: true, expires: false });

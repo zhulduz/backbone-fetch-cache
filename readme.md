@@ -127,5 +127,5 @@ $ grunt
 ```
 
 ## Changelog
-- v0.1.1: Add `prefetch option`.
+- v0.1.1: Add `prefetch` option.
 - v0.1.2: Add AMD support.

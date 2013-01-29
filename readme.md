@@ -23,6 +23,23 @@ Add the script to the page after backbone.js has been included:
 <script src="/path/to/backbone.fetch-cache.js"></script>
 ```
 
+or if you're using AMD, require the script as a module:
+
+```js
+require(['path/to/backbone.fetch-cache.js']);
+```
+
+Note that the AMD module depends on `underscore` and `backbone` modules being defined as it lists them as dependencies. If you don't have these mapped, you can do it by adding the following to your require config:
+
+```js
+requirejs.config({
+  paths: {
+    backbone: 'actual/path/to/backbone.js',
+    underscore: 'actual/path/to/underscore.js'
+  }
+});
+```
+
 ## Options
 ### `cache`
 Calls to `modelInstance.fetch` or `collectionInstance.fetch` will be fulfilled from the cache (if possible) when `cache: true` is set in the options hash:
@@ -111,3 +128,4 @@ $ grunt
 
 ## Changelog
 - v0.1.1: Add `prefetch option`.
+- v0.1.2: Add AMD support.

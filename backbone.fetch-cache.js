@@ -1,9 +1,22 @@
 /*!
-  backbone.fetch-cache v0.1.1
+  backbone.fetch-cache v0.1.2
   by Andy Appleton - https://github.com/mrappleton/backbone-fetch-cache.git
  */
 
-(function() {
+// AMD wrapper from https://github.com/umdjs/umd/blob/master/amdWebGlobal.js
+
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module and set browser global
+    define(['underscore', 'backbone'], function (_, Backbone) {
+      return (root.Backbone = factory(_, Backbone));
+    });
+  } else {
+    // Browser globals
+    root.Backbone = factory(root._, root.Backbone);
+  }
+}(this, function (_, Backbone) {
+
   // Setup
   var modelFetch = Backbone.Model.prototype.fetch,
       collectionFetch = Backbone.Collection.prototype.fetch,
@@ -134,7 +147,5 @@
   Backbone.fetchCache.setLocalStorage = setLocalStorage;
   Backbone.fetchCache.getLocalStorage = getLocalStorage;
 
-  if (typeof define === 'function' && define.amd) {
-    define(function(){ return Backbone; });
-  }
-})();
+  return Backbone;
+}));

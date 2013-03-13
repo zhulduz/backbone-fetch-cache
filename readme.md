@@ -40,6 +40,10 @@ requirejs.config({
 });
 ```
 
+A note on [Zepto.js](http://zeptojs.com/). This plugin uses `jQuery.Deferred`
+which is not included in Zepto. You'll need to add a third party
+implementation of `jQuery.Deferred`, e.g. [Standalone-Deferred](https://github.com/Mumakil/Standalone-Deferred)
+
 ## Options
 ### `cache`
 Calls to `modelInstance.fetch` or `collectionInstance.fetch` will be fulfilled from the cache (if possible) when `cache: true` is set in the options hash:

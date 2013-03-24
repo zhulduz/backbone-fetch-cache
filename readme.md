@@ -97,7 +97,7 @@ myCollection.fetch({ cache: true, expires: 60000 });
 
 // These will never expire
 myModel.fetch({ cache: true, expires: false });
-myCollection.fetch({ cache: expires: false });
+myCollection.fetch({ cache: true, expires: false });
 ```
 
 <hr />

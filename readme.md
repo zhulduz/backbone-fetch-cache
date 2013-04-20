@@ -118,12 +118,6 @@ $ npm install
 $ grunt jasmine
 ```
 
-To see the tests in a browser, run:
-
-```
-$ grunt jasmine-server
-```
-
 The default grunt task runs tests and lints the code.
 
 ```

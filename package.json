@@ -10,10 +10,17 @@
     "type": "git",
     "url": "https://github.com/mrappleton/backbone-fetch-cache.git"
   },
-  "keywords": [ "backbone", "fetch", "cache" ],
-  "dependencies" : {},
+  "keywords": [
+    "backbone",
+    "fetch",
+    "cache"
+  ],
+  "dependencies": {},
   "devDependencies": {
-    "grunt":  "~0.3",
-    "grunt-jasmine-runner": "~0.6"
+    "grunt": "latest",
+    "grunt-contrib-jasmine": "~0.4.2",
+    "grunt-contrib-uglify": "~0.2.0",
+    "grunt-contrib-jshint": "~0.4.3",
+    "grunt-contrib-watch": "~0.3.1"
   }
 }

@@ -161,6 +161,25 @@ describe('Backbone.fetchCache', function() {
     });
 
     describe('.deleteCacheWithPriority', function() {
+      it('calls deleteCacheWithPriority if a QUOTA_EXCEEDED_ERR is thrown', function() {
+        function QuotaError(message){
+            this.name = 'QUOTA_EXCEEDED_ERR';
+        }
+
+        QuotaError.prototype = new Error();
+
+        spyOn(localStorage, 'setItem').andThrow(new QuotaError());
+
+        spyOn(Backbone.fetchCache, '_deleteCacheWithPriority');
+
+        Backbone.fetchCache._cache = {
+          '/url1': { expires: 1000, value: { bacon: 'sandwich' } },
+          '/url2': { expires: 1500, value: { egg: 'roll' } }
+        };
+        Backbone.fetchCache.setLocalStorage();
+        expect(Backbone.fetchCache._deleteCacheWithPriority).toHaveBeenCalled();
+      });
+
       it('should delete a cached item according to what is returned by priorityFn', function() {
         var cache = {
           '/url1': { expires: 1000, value: { bacon: 'sandwich' } },

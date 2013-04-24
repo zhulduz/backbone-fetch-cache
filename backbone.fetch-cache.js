@@ -43,7 +43,15 @@
     Backbone.fetchCache._cache[this._prioritize()] = null;
     delete Backbone.fetchCache._cache[this._prioritize()];
 
-    localStorage.setItem('backboneCache', JSON.stringify(Backbone.fetchCache._cache));
+    try {
+      localStorage.setItem('backboneCache', JSON.stringify(Backbone.fetchCache._cache));
+    } catch (err) {
+      if (err.name.toUpperCase() === 'QUOTA_EXCEEDED_ERR') {
+        this._deleteCacheWithPriority();
+      } else {
+        throw(err);
+      }
+    }
   };
 
   if (typeof Backbone.fetchCache.localStorage === 'undefined') {
@@ -76,8 +84,10 @@
     try {
       localStorage.setItem('backboneCache', JSON.stringify(Backbone.fetchCache._cache));
     } catch (err) {
-      if (err.name === 'QUOTA_EXCEEDED_ERR') {
-        this.deleteCacheWithPriority();
+      if (err.name.toUpperCase() === 'QUOTA_EXCEEDED_ERR') {
+        this._deleteCacheWithPriority();
+      } else {
+        throw(err);
       }
     }
   }

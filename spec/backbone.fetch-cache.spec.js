@@ -1,4 +1,5 @@
 describe('Backbone.fetchCache', function() {
+  var originalPriorityFn = Backbone.fetchCache.priorityFn;
   beforeEach(function() {
     this.model = new Backbone.Model();
     this.model.url = '/model-cache-test';
@@ -24,6 +25,7 @@ describe('Backbone.fetchCache', function() {
   afterEach(function() {
     Backbone.fetchCache._cache = {};
     localStorage.clear('backboneCache');
+    Backbone.fetchCache.priorityFn = originalPriorityFn;
     this.server.restore();
   });
 
@@ -126,6 +128,68 @@ describe('Backbone.fetchCache', function() {
       localStorage.setItem('backboneCache', JSON.stringify(cache));
       Backbone.fetchCache.getLocalStorage();
       expect(Backbone.fetchCache._cache).toEqual(cache);
+    });
+  });
+
+  describe('Automatic expiry when quota is met', function() {
+    describe('.prioritize', function() {
+      it('prioritizes older results by default', function() {
+        var cache = {
+          '/url1': { expires: 1000, value: { bacon: 'sandwich' } },
+          '/url2': { expires: 1500, value: { egg: 'roll' } }
+        };
+        localStorage.setItem('backboneCache', JSON.stringify(cache));
+        Backbone.fetchCache.getLocalStorage();
+        expect(Backbone.fetchCache._prioritize()).toBeDefined();
+        expect(Backbone.fetchCache._prioritize()).toEqual('/url1');
+      });
+    });
+
+    describe('.priorityFn', function() {
+      it('should take a custom priorityFn sorting function', function() {
+        var cache = {
+          '/url1': { expires: 1000, value: { bacon: 'sandwich' } },
+          '/url2': { expires: 1500, value: { egg: 'roll' } }
+        };
+        localStorage.setItem('backboneCache', JSON.stringify(cache));
+        Backbone.fetchCache.getLocalStorage();
+        Backbone.fetchCache.priorityFn = function(a, b) {
+          return b.expires - a.expires;
+        };
+        expect(Backbone.fetchCache._prioritize()).toEqual('/url2');
+      });
+    });
+
+    describe('.deleteCacheWithPriority', function() {
+      it('calls deleteCacheWithPriority if a QUOTA_EXCEEDED_ERR is thrown', function() {
+        function QuotaError(message){
+            this.name = 'QUOTA_EXCEEDED_ERR';
+        }
+
+        QuotaError.prototype = new Error();
+
+        spyOn(localStorage, 'setItem').andThrow(new QuotaError());
+
+        spyOn(Backbone.fetchCache, '_deleteCacheWithPriority');
+
+        Backbone.fetchCache._cache = {
+          '/url1': { expires: 1000, value: { bacon: 'sandwich' } },
+          '/url2': { expires: 1500, value: { egg: 'roll' } }
+        };
+        Backbone.fetchCache.setLocalStorage();
+        expect(Backbone.fetchCache._deleteCacheWithPriority).toHaveBeenCalled();
+      });
+
+      it('should delete a cached item according to what is returned by priorityFn', function() {
+        var cache = {
+          '/url1': { expires: 1000, value: { bacon: 'sandwich' } },
+          '/url2': { expires: 1500, value: { egg: 'roll' } }
+        };
+        localStorage.setItem('backboneCache', JSON.stringify(cache));
+        Backbone.fetchCache.getLocalStorage();
+        Backbone.fetchCache._deleteCacheWithPriority();
+        expect(Backbone.fetchCache._cache).toEqual({'/url2': { expires: 1500, value: { egg: 'roll' } }});
+      });
     });
   });
 

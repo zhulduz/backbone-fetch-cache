@@ -109,6 +109,27 @@ By default the cache is persisted in localStorage (if available). Set `Backbone.
 Backbone.fetchCache.localStorage = false;
 ```
 
+### `priorityFn`
+When setting items in localStorage, the browser may throw a ```QUOTA_EXCEEDED_ERR```, meaning the store is full. Backbone.fetchCache tries to work around this problem by deleting what it considers the most stale item to make space for the new data. The staleness of data is determined by the sorting function ```priorityFn````, which by default returns the oldest item.
+
+The default is:
+```
+Backbone.fetchCache.priorityFn = function(a, b) {
+  if (!a || !a.expires || !b || !b.expires) {
+    return a;
+  }
+
+  return a.expires - b.expires;
+};
+```
+
+You can override this function with your own logic (in this case, returning the most recent item):
+```
+Backbone.fetchCache.priorityFn = function(a, b) {
+  return b.expires - a.expires;
+};
+```
+
 ## Tests
 You can run the tests by cloning the repo, installing the dependencies and
 running `grunt jasmine`:

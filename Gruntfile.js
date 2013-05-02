@@ -43,31 +43,7 @@ module.exports = function(grunt) {
     jshint: {
       files: ['grunt.js', 'backbone.fetch-cache.js', 'spec/**/*.spec.js'],
       options: {
-        curly: true,
-        eqeqeq: true,
-        immed: true,
-        latedef: true,
-        newcap: true,
-        noarg: true,
-        sub: true,
-        undef: true,
-        boss: true,
-        eqnull: true,
-        browser: true,
-        globals: {
-          $: true,
-          _: true,
-          Backbone: true,
-          define: true,
-          it: true,
-          describe: true,
-          beforeEach: true,
-          afterEach: true,
-          expect: true,
-          spyOn: true,
-          jasmine: true,
-          sinon: true
-        }
+        jshintrc: '.jshintrc'
       }
     }
   });

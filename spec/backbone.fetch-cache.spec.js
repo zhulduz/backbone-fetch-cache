@@ -129,6 +129,11 @@ describe('Backbone.fetchCache', function() {
       Backbone.fetchCache.getLocalStorage();
       expect(Backbone.fetchCache._cache).toEqual(cache);
     });
+
+    it('always primes the cache with an object', function() {
+      Backbone.fetchCache.getLocalStorage();
+      expect(Backbone.fetchCache._cache).toEqual({});
+    });
   });
 
   describe('Automatic expiry when quota is met', function() {

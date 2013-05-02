@@ -146,6 +146,7 @@ $ grunt
 ```
 
 ## Changelog
+- v0.1.4: Bug fix for older Webkits which throw an error trying to JSON.parse(null)
 - v0.1.3: Auto expiration of old cache items if `locaStorage` gets full - thanks [@inf0rmer](https://github.com/inf0rmer)!.
 - v0.1.2: Add AMD support.
 - v0.1.1: Add `prefetch` option.

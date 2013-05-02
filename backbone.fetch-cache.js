@@ -1,5 +1,5 @@
 /*!
-  backbone.fetch-cache v0.1.2
+  backbone.fetch-cache v0.1.4
   by Andy Appleton - https://github.com/mrappleton/backbone-fetch-cache.git
  */
 
@@ -94,7 +94,8 @@
 
   function getLocalStorage() {
     if (!supportLocalStorage || !Backbone.fetchCache.localStorage) { return; }
-    Backbone.fetchCache._cache = JSON.parse(localStorage.getItem('backboneCache')) || {};
+    var json = localStorage.getItem('backboneCache') || '{}';
+    Backbone.fetchCache._cache = JSON.parse(json);
   }
 
   // Instance methods

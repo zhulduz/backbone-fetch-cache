@@ -95,6 +95,21 @@ describe('Backbone.fetchCache', function() {
     });
   });
 
+  describe('.clearItem', function() {
+    beforeEach(function() {
+      Backbone.fetchCache._cache = {
+        '/item/1': { foo: 'bar' },
+        '/item/2': { beep: 'boop' }
+      };
+    });
+
+    it('deletes a single item from the cache', function() {
+      Backbone.fetchCache.clearItem('/item/1');
+      expect(Backbone.fetchCache._cache['/item/1']).toBeUndefined();
+      expect(Backbone.fetchCache._cache['/item/2']).toEqual({ beep: 'boop' });
+    });
+  });
+
   describe('.setLocalStorage', function() {
     it('puts the cache into localStorage', function() {
       var cache = Backbone.fetchCache._cache = {

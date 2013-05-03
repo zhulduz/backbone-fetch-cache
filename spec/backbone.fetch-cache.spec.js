@@ -385,6 +385,16 @@ describe('Backbone.fetchCache', function() {
         expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
       });
 
+      it('calls super', function() {
+        spyOn(Backbone.fetchCache._superMethods, 'modelSave');
+        this.model.save();
+        expect(Backbone.fetchCache._superMethods.modelSave).toHaveBeenCalled();
+      });
+
+      it('returns the result of calling super', function() {
+        expect(this.model.save()).toBeAPromise();
+      });
+
       describe('with an associated collection', function() {
         beforeEach(function() {
           var cache = {};

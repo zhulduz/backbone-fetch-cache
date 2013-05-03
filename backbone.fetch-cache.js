@@ -18,8 +18,11 @@
 }(this, function (_, Backbone) {
 
   // Setup
-  var modelFetch = Backbone.Model.prototype.fetch,
-      collectionFetch = Backbone.Collection.prototype.fetch,
+  var superMethods = {
+        modelFetch: Backbone.Model.prototype.fetch,
+        modelSave: Backbone.Model.prototype.save,
+        collectionFetch: Backbone.Collection.prototype.fetch
+      },
       supportLocalStorage = typeof window.localStorage !== 'undefined';
 
   Backbone.fetchCache = (Backbone.fetchCache || {});
@@ -128,7 +131,7 @@
     }
 
     // Delegate to the actual fetch method and store the attributes in the cache
-    modelFetch.apply(this, arguments)
+    superMethods.modelFetch.apply(this, arguments)
       // resolve the returned promise when the AJAX call completes
       .done( _.bind(promise.resolve, this, this) )
       // Set the new data in the cache
@@ -167,7 +170,7 @@
     }
 
     // Delegate to the actual fetch method and store the attributes in the cache
-    collectionFetch.apply(this, arguments)
+    superMethods.collectionFetch.apply(this, arguments)
       // resolve the returned promise when the AJAX call completes
       .done( _.bind(promise.resolve, this, this) )
       // Set the new data in the cache
@@ -181,6 +184,7 @@
   getLocalStorage();
 
   // Exports
+  Backbone.fetchCache._superMethods = superMethods;
   Backbone.fetchCache.setCache = setCache;
   Backbone.fetchCache.setLocalStorage = setLocalStorage;
   Backbone.fetchCache.getLocalStorage = getLocalStorage;

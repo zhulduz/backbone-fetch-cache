@@ -371,6 +371,36 @@ describe('Backbone.fetchCache', function() {
         });
       });
     });
+
+    describe('.prototype.save', function() {
+      beforeEach(function() {
+        var cache = {};
+        cache[this.model.url] = { some: 'data' };
+        localStorage.setItem('backboneCache', JSON.stringify(cache));
+        Backbone.fetchCache.getLocalStorage();
+      });
+
+      it('clears the cache for the model', function() {
+        this.model.save();
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      describe('with an associated collection', function() {
+        beforeEach(function() {
+          var cache = {};
+          this.model.collection = this.collection;
+          cache[this.collection.url] = [{ some: 'data' }];
+          localStorage.setItem('backboneCache', JSON.stringify(cache));
+          Backbone.fetchCache.getLocalStorage();
+        });
+
+        it('clears the cache for the collection', function() {
+          this.model.save();
+          expect(Backbone.fetchCache._cache[this.collection.url])
+            .toBeUndefined();
+        });
+      });
+    });
   });
 
   describe('Backbone.Collection', function() {

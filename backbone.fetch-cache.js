@@ -141,6 +141,27 @@
     return promise;
   };
 
+  Backbone.Model.prototype.save = function() {
+    var collection = this.collection,
+        keys = [],
+        i, len;
+
+    // Build up a list of keys to delete from the cache, starting with this
+    keys.push(_.isFunction(this.url) ? this.url() : this.url);
+
+    // If this model has a collection, also try to delete the cache for that
+    if (!!collection) {
+      keys.push(_.isFunction(collection.url) ? collection.url() : collection.url);
+    }
+
+    // Empty cache for all found keys
+    for (i = 0, len = keys.length; i < len; i++) {
+      delete Backbone.fetchCache._cache[keys[i]];
+    }
+
+    return superMethods.modelSave.apply(this, arguments);
+  };
+
   Backbone.Collection.prototype.fetch = function(opts) {
     opts = (opts || {});
     var url = _.isFunction(this.url) ? this.url() : this.url,

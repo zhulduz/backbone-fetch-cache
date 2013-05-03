@@ -44,7 +44,7 @@
 
   Backbone.fetchCache._deleteCacheWithPriority = function() {
     Backbone.fetchCache._cache[this._prioritize()] = null;
-    delete Backbone.fetchCache._cache[this._prioritize()];
+    clearItem(this._prioritize());
 
     try {
       localStorage.setItem('backboneCache', JSON.stringify(Backbone.fetchCache._cache));
@@ -159,9 +159,7 @@
     }
 
     // Empty cache for all found keys
-    for (i = 0, len = keys.length; i < len; i++) {
-      delete Backbone.fetchCache._cache[keys[i]];
-    }
+    for (i = 0, len = keys.length; i < len; i++) { clearItem(keys[i]); }
 
     return superMethods.modelSave.apply(this, arguments);
   };

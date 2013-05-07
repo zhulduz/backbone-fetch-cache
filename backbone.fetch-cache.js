@@ -75,7 +75,8 @@
     try {
       localStorage.setItem('backboneCache', JSON.stringify(Backbone.fetchCache._cache));
     } catch (err) {
-      if (err.name.toUpperCase() === 'QUOTA_EXCEEDED_ERR') {
+      var code = err.code || err.number;
+      if (code === 22) {
         this._deleteCacheWithPriority();
       } else {
         throw(err);

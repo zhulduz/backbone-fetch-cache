@@ -75,7 +75,7 @@
     try {
       localStorage.setItem('backboneCache', JSON.stringify(Backbone.fetchCache._cache));
     } catch (err) {
-      var code = err.code || err.number;
+      var code = err.code || err.number || err.message;
       if (code === 22) {
         this._deleteCacheWithPriority();
       } else {

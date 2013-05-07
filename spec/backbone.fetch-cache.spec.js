@@ -204,6 +204,25 @@ describe('Backbone.fetchCache', function() {
         expect(Backbone.fetchCache._deleteCacheWithPriority).toHaveBeenCalled();
       });
 
+      it('calls deleteCacheWithPriority if a QUOTA_EXCEEDED_ERR is thrown in Firefox', function() {
+        function FFQuotaError(message) {
+          this.message = 22;
+        }
+
+        FFQuotaError.prototype = new Error();
+
+        spyOn(localStorage, 'setItem').andThrow(new FFQuotaError());
+
+        spyOn(Backbone.fetchCache, '_deleteCacheWithPriority');
+
+        Backbone.fetchCache._cache = {
+          '/url1': { expires: 1000, value: { bacon: 'sandwich' } },
+          '/url2': { expires: 1500, value: { egg: 'roll' } }
+        };
+        Backbone.fetchCache.setLocalStorage();
+        expect(Backbone.fetchCache._deleteCacheWithPriority).toHaveBeenCalled();
+      });
+
       it('should delete a cached item according to what is returned by priorityFn', function() {
         var cache = {
           '/url1': { expires: 1000, value: { bacon: 'sandwich' } },

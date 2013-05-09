@@ -401,9 +401,9 @@ describe('Backbone.fetchCache', function() {
       });
 
       it('calls super', function() {
-        spyOn(Backbone.fetchCache._superMethods, 'modelSave');
+        spyOn(Backbone.fetchCache._superMethods, 'modelSync');
         this.model.save();
-        expect(Backbone.fetchCache._superMethods.modelSave).toHaveBeenCalled();
+        expect(Backbone.fetchCache._superMethods.modelSync).toHaveBeenCalled();
       });
 
       it('returns the result of calling super', function() {

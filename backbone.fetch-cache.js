@@ -20,7 +20,7 @@
   // Setup
   var superMethods = {
         modelFetch: Backbone.Model.prototype.fetch,
-        modelSave: Backbone.Model.prototype.save,
+        modelSync: Backbone.Model.prototype.sync,
         collectionFetch: Backbone.Collection.prototype.fetch
       },
       supportLocalStorage = typeof window.localStorage !== 'undefined';
@@ -145,13 +145,20 @@
     return promise;
   };
 
-  Backbone.Model.prototype.save = function() {
-    var collection = this.collection,
+  // Override Model.prototype.sync and try to clear cache items if it looks
+  // like they are being updated.
+  Backbone.Model.prototype.sync = function(method, model, options) {
+    // Only empty the cache if we're doing a create, update, patch or delete.
+    if (method === 'read') {
+      return superMethods.modelSync.apply(this, arguments);
+    }
+
+    var collection = model.collection,
         keys = [],
         i, len;
 
     // Build up a list of keys to delete from the cache, starting with this
-    keys.push(_.isFunction(this.url) ? this.url() : this.url);
+    keys.push(_.isFunction(model.url) ? model.url() : model.url);
 
     // If this model has a collection, also try to delete the cache for that
     if (!!collection) {
@@ -161,7 +168,7 @@
     // Empty cache for all found keys
     for (i = 0, len = keys.length; i < len; i++) { clearItem(keys[i]); }
 
-    return superMethods.modelSave.apply(this, arguments);
+    return superMethods.modelSync.apply(this, arguments);
   };
 
   Backbone.Collection.prototype.fetch = function(opts) {

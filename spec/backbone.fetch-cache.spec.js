@@ -387,27 +387,48 @@ describe('Backbone.fetchCache', function() {
       });
     });
 
-    describe('.prototype.save', function() {
+    describe('.prototype.sync', function() {
       beforeEach(function() {
         var cache = {};
-        cache[this.model.url] = { some: 'data' };
+        this.data = { some: 'data' };
+        cache[this.model.url] = this.data;
         localStorage.setItem('backboneCache', JSON.stringify(cache));
         Backbone.fetchCache.getLocalStorage();
       });
 
-      it('clears the cache for the model', function() {
-        this.model.save();
+      it('clears the cache for the model on create', function() {
+        this.model.sync('create', this.model, {});
         expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      it('clears the cache for the model on update', function() {
+        this.model.sync('update', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      it('clears the cache for the model on patch', function() {
+        this.model.sync('create', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      it('clears the cache for the model on delete', function() {
+        this.model.sync('create', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      it('does not clear the cache for the model on read', function() {
+        this.model.sync('read', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toEqual(this.data);
       });
 
       it('calls super', function() {
         spyOn(Backbone.fetchCache._superMethods, 'modelSync');
-        this.model.save();
+        this.model.sync('create', this.model, {});
         expect(Backbone.fetchCache._superMethods.modelSync).toHaveBeenCalled();
       });
 
       it('returns the result of calling super', function() {
-        expect(this.model.save()).toBeAPromise();
+        expect(this.model.sync('create', this.model, {})).toBeAPromise();
       });
 
       describe('with an associated collection', function() {
@@ -420,7 +441,7 @@ describe('Backbone.fetchCache', function() {
         });
 
         it('clears the cache for the collection', function() {
-          this.model.save();
+          this.model.sync('create', this.model, {});
           expect(Backbone.fetchCache._cache[this.collection.url])
             .toBeUndefined();
         });

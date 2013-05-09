@@ -44,17 +44,8 @@
 
   Backbone.fetchCache._deleteCacheWithPriority = function() {
     Backbone.fetchCache._cache[this._prioritize()] = null;
-    clearItem(this._prioritize());
-
-    try {
-      localStorage.setItem('backboneCache', JSON.stringify(Backbone.fetchCache._cache));
-    } catch (err) {
-      if (err.name.toUpperCase() === 'QUOTA_EXCEEDED_ERR') {
-        this._deleteCacheWithPriority();
-      } else {
-        throw(err);
-      }
-    }
+    delete Backbone.fetchCache._cache[this._prioritize()];
+    Backbone.fetchCache.setLocalStorage();
   };
 
   if (typeof Backbone.fetchCache.localStorage === 'undefined') {
@@ -91,7 +82,8 @@
     try {
       localStorage.setItem('backboneCache', JSON.stringify(Backbone.fetchCache._cache));
     } catch (err) {
-      if (err.name.toUpperCase() === 'QUOTA_EXCEEDED_ERR') {
+      var code = err.code || err.number || err.message;
+      if (code === 22) {
         this._deleteCacheWithPriority();
       } else {
         throw(err);

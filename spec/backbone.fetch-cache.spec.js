@@ -367,6 +367,16 @@ describe('Backbone.fetchCache', function() {
         expect(spy).toHaveBeenCalledWith(this.model);
       });
 
+      it('rejects the returned promise on AJAX error', function() {
+        var spy = jasmine.createSpy('error');
+
+        this.model.url = '/non-existant';
+        this.model.fetch().fail(spy);
+        this.server.respond();
+
+        expect(spy).toHaveBeenCalled();
+      });
+
       describe('with prefill: true option', function() {
         beforeEach(function(){
           this.cacheData = { cheese: 'pickle' };
@@ -633,6 +643,16 @@ describe('Backbone.fetchCache', function() {
         this.collection.fetch({ cache: true }).done(spy);
 
         expect(spy).toHaveBeenCalledWith(this.collection);
+      });
+
+      it('rejects the returned promise on AJAX error', function() {
+        var spy = jasmine.createSpy('error');
+
+        this.collection.url = '/non-existant';
+        this.collection.fetch().fail(spy);
+        this.server.respond();
+
+        expect(spy).toHaveBeenCalled();
       });
 
       describe('with prefill: true option', function() {

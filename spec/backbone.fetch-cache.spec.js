@@ -95,6 +95,21 @@ describe('Backbone.fetchCache', function() {
     });
   });
 
+  describe('.clearItem', function() {
+    beforeEach(function() {
+      Backbone.fetchCache._cache = {
+        '/item/1': { foo: 'bar' },
+        '/item/2': { beep: 'boop' }
+      };
+    });
+
+    it('deletes a single item from the cache', function() {
+      Backbone.fetchCache.clearItem('/item/1');
+      expect(Backbone.fetchCache._cache['/item/1']).toBeUndefined();
+      expect(Backbone.fetchCache._cache['/item/2']).toEqual({ beep: 'boop' });
+    });
+  });
+
   describe('.setLocalStorage', function() {
     it('puts the cache into localStorage', function() {
       var cache = Backbone.fetchCache._cache = {
@@ -406,6 +421,67 @@ describe('Backbone.fetchCache', function() {
 
           expect(success.calls[0].args[0]).toEqual(this.model);
           expect(success.calls[0].args[1]).toEqual(this.modelResponse);
+        });
+      });
+    });
+
+    describe('.prototype.sync', function() {
+      beforeEach(function() {
+        var cache = {};
+        this.data = { some: 'data' };
+        cache[this.model.url] = this.data;
+        localStorage.setItem('backboneCache', JSON.stringify(cache));
+        Backbone.fetchCache.getLocalStorage();
+      });
+
+      it('clears the cache for the model on create', function() {
+        this.model.sync('create', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      it('clears the cache for the model on update', function() {
+        this.model.sync('update', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      it('clears the cache for the model on patch', function() {
+        this.model.sync('create', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      it('clears the cache for the model on delete', function() {
+        this.model.sync('create', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+      it('does not clear the cache for the model on read', function() {
+        this.model.sync('read', this.model, {});
+        expect(Backbone.fetchCache._cache[this.model.url]).toEqual(this.data);
+      });
+
+      it('calls super', function() {
+        spyOn(Backbone.fetchCache._superMethods, 'modelSync');
+        this.model.sync('create', this.model, {});
+        expect(Backbone.fetchCache._superMethods.modelSync).toHaveBeenCalled();
+      });
+
+      it('returns the result of calling super', function() {
+        expect(this.model.sync('create', this.model, {})).toBeAPromise();
+      });
+
+      describe('with an associated collection', function() {
+        beforeEach(function() {
+          var cache = {};
+          this.model.collection = this.collection;
+          cache[this.collection.url] = [{ some: 'data' }];
+          localStorage.setItem('backboneCache', JSON.stringify(cache));
+          Backbone.fetchCache.getLocalStorage();
+        });
+
+        it('clears the cache for the collection', function() {
+          this.model.sync('create', this.model, {});
+          expect(Backbone.fetchCache._cache[this.collection.url])
+            .toBeUndefined();
         });
       });
     });

@@ -59,7 +59,8 @@
         expires = false;
 
     // need url to use as cache key so return if we can't get it
-    if (!url) { return; }
+    // Don't set the cache unless cache: true option is passed
+    if (!(url && opts.cache)) { return; }
 
     if (opts.expires !== false) {
       expires = (new Date()).getTime() + ((opts.expires || 5 * 60) * 1000);

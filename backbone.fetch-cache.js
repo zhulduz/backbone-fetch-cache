@@ -131,7 +131,9 @@
       // resolve the returned promise when the AJAX call completes
       .done( _.bind(promise.resolve, this, this) )
       // Set the new data in the cache
-      .done( _.bind(Backbone.fetchCache.setCache, null, this, opts) );
+      .done( _.bind(Backbone.fetchCache.setCache, null, this, opts) )
+      // Reject the promise on fail
+      .fail( _.bind(promise.reject, this, this) );
 
     // return a promise which provides the same methods as a jqXHR object
     return promise;
@@ -196,7 +198,9 @@
       // resolve the returned promise when the AJAX call completes
       .done( _.bind(promise.resolve, this, this) )
       // Set the new data in the cache
-      .done( _.bind(Backbone.fetchCache.setCache, null, this, opts) );
+      .done( _.bind(Backbone.fetchCache.setCache, null, this, opts) )
+      // Reject the promise on fail
+      .fail( _.bind(promise.reject, this, this) );
 
     // return a promise which provides the same methods as a jqXHR object
     return promise;

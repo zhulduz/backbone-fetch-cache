@@ -73,6 +73,25 @@ describe('Backbone.fetchCache', function() {
       expect(Backbone.fetchCache.setLocalStorage).toHaveBeenCalled();
     });
 
+    describe('with prefill: true option', function() {
+      beforeEach(function() {
+        this.opts = { prefill: true };
+      });
+
+      it('caches even if cache: true is not passed', function() {
+        Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
+        expect(Backbone.fetchCache._cache[this.model.url].value)
+          .toEqual(this.modelResponse);
+      });
+
+      it('does not cache if cache: false is passed', function() {
+        this.opts.cache = false;
+        Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
+    });
+
     describe('cache expiry', function() {
       beforeEach(function() {
         this.clock = sinon.useFakeTimers();

@@ -46,22 +46,50 @@ describe('Backbone.fetchCache', function() {
   });
 
   describe('.setCache', function() {
+    beforeEach(function() {
+      this.opts = { cache: true };
+    });
+
     it('noops if the instance does not have a url', function() {
       this.model.url = null;
+      Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
+      expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+    });
+
+    it('noops unless cache: true is passed', function() {
       Backbone.fetchCache.setCache(this.model, null, this.modelResponse);
       expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
     });
 
     it('keys cache items by URL',function() {
-      Backbone.fetchCache.setCache(this.model, null, this.modelResponse);
+      Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
       expect(Backbone.fetchCache._cache[this.model.url].value)
         .toEqual(this.modelResponse);
     });
 
     it('calls setLocalStorage', function() {
       spyOn(Backbone.fetchCache, 'setLocalStorage');
-      Backbone.fetchCache.setCache(this.model);
+      Backbone.fetchCache.setCache(this.model, this.opts);
       expect(Backbone.fetchCache.setLocalStorage).toHaveBeenCalled();
+    });
+
+    describe('with prefill: true option', function() {
+      beforeEach(function() {
+        this.opts = { prefill: true };
+      });
+
+      it('caches even if cache: true is not passed', function() {
+        Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
+        expect(Backbone.fetchCache._cache[this.model.url].value)
+          .toEqual(this.modelResponse);
+      });
+
+      it('does not cache if cache: false is passed', function() {
+        this.opts.cache = false;
+        Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
+        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      });
+
     });
 
     describe('cache expiry', function() {
@@ -254,7 +282,7 @@ describe('Backbone.fetchCache', function() {
   describe('Backbone.Model', function() {
     describe('.prototype.fetch', function() {
       it('saves returned attributes to the attributeCache', function() {
-        this.model.fetch();
+        this.model.fetch({ cache: true });
         this.server.respond();
         expect(Backbone.fetchCache._cache[this.model.url].value).toEqual(this.model.toJSON());
       });
@@ -500,7 +528,7 @@ describe('Backbone.fetchCache', function() {
   describe('Backbone.Collection', function() {
     describe('.prototype.fetch', function() {
       it('saves returned attributes to the attributeCache', function() {
-        this.collection.fetch();
+        this.collection.fetch({ cache: true });
         this.server.respond();
         expect(Backbone.fetchCache._cache[this.collection.url].value)
           .toEqual(this.collection.toJSON());

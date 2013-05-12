@@ -58,8 +58,14 @@
     var url = _.isFunction(instance.url) ? instance.url() : instance.url,
         expires = false;
 
-    // need url to use as cache key so return if we can't get it
+    // Need url to use as cache key so return if we can't get it
     if (!url) { return; }
+
+    // Never set the cache if user has explicitly said not to
+    if (opts.cache === false) { return; }
+
+    // Don't set the cache unless cache: true or prefill: true option is passed
+    if (!(opts.cache || opts.prefill)) { return; }
 
     if (opts.expires !== false) {
       expires = (new Date()).getTime() + ((opts.expires || 5 * 60) * 1000);

@@ -158,6 +158,7 @@ $ grunt
 ```
 
 ## Changelog
+- v0.1.7: Ensures that `parse` is called for collections - thanks [@fernandopg](https://github.com/fernandopg)!
 - v0.1.6: Update to call the correct `add` and `reset` methods for collections - thanks [@mzafer](https://github.com/mzafer)!
 - v0.1.5: Attempt to clear cache keys on PUT/POST/DELETE
 - v0.1.4: Bug fix for older Webkits which throw an error trying to JSON.parse(null)

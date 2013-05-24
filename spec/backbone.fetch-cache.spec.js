@@ -595,11 +595,11 @@ describe('Backbone.fetchCache', function() {
         expect(this.collection.toJSON()).toEqual(cacheData);
       });
 
-      it('calls add according to options on a cache hit', function() {
+      it('calls set according to options on a cache hit', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
-            options = { cache: true, add: true };
+            options = { cache: true, remove: false };
 
-        spyOn(this.collection, 'add');
+        spyOn(this.collection, 'set');
         Backbone.fetchCache._cache[this.collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
@@ -607,12 +607,12 @@ describe('Backbone.fetchCache', function() {
 
         this.collection.fetch(options);
 
-        expect(this.collection.add).toHaveBeenCalledWith(cacheData, options);
+        expect(this.collection.set).toHaveBeenCalledWith(cacheData, options);
       });
 
       it('calls reset according to options on a cache hit', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
-            options = { cache: true, add: false };
+            options = { cache: true, reset: true };
 
         spyOn(this.collection, 'reset');
         Backbone.fetchCache._cache[this.collection.url] = {

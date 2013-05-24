@@ -612,7 +612,7 @@ describe('Backbone.fetchCache', function() {
 
       it('calls reset according to options on a cache hit', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
-            options = { cache: true, remove: true };
+            options = { cache: true, reset: true };
 
         spyOn(this.collection, 'reset');
         Backbone.fetchCache._cache[this.collection.url] = {

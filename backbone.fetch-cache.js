@@ -189,7 +189,7 @@
     }
 
     if (!expired && (opts.cache || opts.prefill) && attributes) {
-      this.reset(this.parse(attributes), opts);
+      this[opts.reset ? 'reset' : 'set'](this.parse(attributes), opts);
       if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this); }
 
       // Notify progress if we're still waiting for an AJAX call to happen...

@@ -52,6 +52,9 @@
     Backbone.fetchCache.localStorage = true;
   }
 
+  function getCacheKey(url, opts){
+    return url + "?" + JSON.stringify(opts.data);
+  }
   // Shared methods
   function setCache(instance, opts, attrs) {
     opts = (opts || {});
@@ -71,7 +74,7 @@
       expires = (new Date()).getTime() + ((opts.expires || 5 * 60) * 1000);
     }
 
-    Backbone.fetchCache._cache[url] = {
+    Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(url, opts)] = {
       expires: expires,
       value: attrs
     };
@@ -107,7 +110,7 @@
   Backbone.Model.prototype.fetch = function(opts) {
     opts = (opts || {});
     var url = _.isFunction(this.url) ? this.url() : this.url,
-        data = Backbone.fetchCache._cache[url],
+        data = Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(url, opts)],
         expired = false,
         attributes = false,
         promise = new $.Deferred();
@@ -174,7 +177,7 @@
   Backbone.Collection.prototype.fetch = function(opts) {
     opts = (opts || {});
     var url = _.isFunction(this.url) ? this.url() : this.url,
-        data = Backbone.fetchCache._cache[url],
+        data = Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(url, opts)],
         expired = false,
         attributes = false,
         promise = new $.Deferred();
@@ -186,7 +189,7 @@
     }
 
     if (!expired && (opts.cache || opts.prefill) && attributes) {
-      this[opts.reset ? 'reset' : 'set'](this.parse(attributes), opts);
+      this.reset(this.parse(attributes), opts);
       if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this); }
 
       // Notify progress if we're still waiting for an AJAX call to happen...
@@ -216,8 +219,10 @@
   getLocalStorage();
 
   // Exports
+
   Backbone.fetchCache._superMethods = superMethods;
   Backbone.fetchCache.setCache = setCache;
+  Backbone.fetchCache.getCacheKey = getCacheKey;
   Backbone.fetchCache.clearItem = clearItem;
   Backbone.fetchCache.setLocalStorage = setLocalStorage;
   Backbone.fetchCache.getLocalStorage = getLocalStorage;

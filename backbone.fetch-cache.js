@@ -53,7 +53,10 @@
   }
 
   function getCacheKey(url, opts){
-    return url + "?" + JSON.stringify(opts.data);
+      if(opts){
+        return url + "?" + JSON.stringify(opts.data);
+      }
+      return url;
   }
   // Shared methods
   function setCache(instance, opts, attrs) {

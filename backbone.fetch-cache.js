@@ -51,14 +51,15 @@
   if (typeof Backbone.fetchCache.localStorage === 'undefined') {
     Backbone.fetchCache.localStorage = true;
   }
-
-  function getCacheKey(url, opts){
-      if(opts && opts.data){
-        return url + "?" + JSON.stringify(opts.data);
-      }
-      return url;
-  }
+  
   // Shared methods
+  function getCacheKey(url, opts){
+    if(opts && opts.data){
+      return url + "?" + JSON.stringify(opts.data);
+    }
+    return url;
+  }
+
   function setCache(instance, opts, attrs) {
     opts = (opts || {});
     var url = _.isFunction(instance.url) ? instance.url() : instance.url,

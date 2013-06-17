@@ -53,7 +53,7 @@
   }
 
   function getCacheKey(url, opts){
-      if(opts){
+      if(opts && opts.data){
         return url + "?" + JSON.stringify(opts.data);
       }
       return url;

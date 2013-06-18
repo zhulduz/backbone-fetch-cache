@@ -446,8 +446,29 @@ describe('Backbone.fetchCache', function() {
           expect(success.calls[0].args[1]).toEqual(this.modelResponse);
         });
 
+        it('triggers sync on prefill success and success', function() {
+          var prefillSuccess = jasmine.createSpy('prefillSuccess'),
+              success = jasmine.createSpy('success'),
+              sync = jasmine.createSpy('sync');
+
+          this.model.fetch({
+            prefill: true,
+            success: success,
+            prefillSuccess: prefillSuccess
+          });
+
+          expect(sync).toHaveBeenCalledWith(this.model);
+
+          this.server.respond();
+
+          expect(sync).toHaveBeenCalledWith(this.model);
+
+          expect(success.calls[0].args[0]).toEqual(this.model);
+          expect(success.calls[0].args[1]).toEqual(this.modelResponse);
+        });
+
         it('triggers progress on the promise on cache hit', function() {
-          var progress = jasmine.createSpy('progeress');
+          var progress = jasmine.createSpy('progress');
           this.model.fetch({ prefill: true }).progress(progress);
           expect(progress).toHaveBeenCalledWith(this.model);
         });

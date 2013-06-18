@@ -451,17 +451,21 @@ describe('Backbone.fetchCache', function() {
               success = jasmine.createSpy('success'),
               sync = jasmine.createSpy('sync');
 
+          this.model.bind('sync', sync);
+
           this.model.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
           });
 
-          expect(sync).toHaveBeenCalledWith(this.model);
+          expect(sync).toHaveBeenCalled();
+          expect(sync.callCount).toEqual(1);
 
           this.server.respond();
 
-          expect(sync).toHaveBeenCalledWith(this.model);
+          expect(sync).toHaveBeenCalled();
+          expect(sync.callCount).toEqual(2);
 
           expect(success.calls[0].args[0]).toEqual(this.model);
           expect(success.calls[0].args[1]).toEqual(this.modelResponse);

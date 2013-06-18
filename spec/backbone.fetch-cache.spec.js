@@ -437,7 +437,8 @@ describe('Backbone.fetchCache', function() {
             prefillSuccess: prefillSuccess
           });
 
-          expect(prefillSuccess).toHaveBeenCalledWith(this.model);
+          expect(prefillSuccess.calls[0].args[0]).toEqual(this.model);
+          expect(prefillSuccess.calls[0].args[1]).toEqual(this.model.attributes);
           expect(success).not.toHaveBeenCalled();
 
           this.server.respond();
@@ -736,7 +737,8 @@ describe('Backbone.fetchCache', function() {
             prefillSuccess: prefillSuccess
           });
 
-          expect(prefillSuccess).toHaveBeenCalledWith(this.collection);
+          expect(prefillSuccess.calls[0].args[0]).toEqual(this.collection);
+          expect(prefillSuccess.calls[0].args[1]).toEqual(this.collection.attributes);
           expect(success).not.toHaveBeenCalled();
 
           this.server.respond();

@@ -120,7 +120,7 @@
 
     if (!expired && (opts.cache || opts.prefill) && attributes) {
       this.set(this.parse(attributes), opts);
-      if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this); }
+      if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this, attributes, opts); }
 
       // Trigger sync event
       this.trigger('sync', this, attributes, opts);

@@ -63,7 +63,9 @@ describe('Backbone.fetchCache', function() {
 
     it('keys cache items by URL',function() {
       Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
-      expect(Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(this.model.url, this.opts)].value)
+      expect(Backbone.fetchCache._cache[
+              Backbone.fetchCache.getCacheKey(this.model.url, this.opts)
+          ].value)
         .toEqual(this.modelResponse);
     });
 

@@ -91,11 +91,12 @@
   }
 
   function clearItem(key) {
-    for(var k in Backbone.fetchCache._cache) {
-      if(k.indexOf(key) === 0) {
+    // remove all key starting with some key
+    _.each(_.keys(Backbone.fetchCache._cache), function(k) {
+      if (k.indexOf(key) === 0) {
         delete Backbone.fetchCache._cache[k];
       }
-    }
+    });
   }
 
   function setLocalStorage() {
@@ -173,11 +174,11 @@
         i, len;
 
     // Build up a list of keys to delete from the cache, starting with this
-    keys.push(_.isFunction(model.url) ? model.url() : model.url);
+    keys.push(Backbone.fetchCache.getCacheKey(model));
 
     // If this model has a collection, also try to delete the cache for that
     if (!!collection) {
-      keys.push(_.isFunction(collection.url) ? collection.url() : collection.url);
+      keys.push(Backbone.fetchCache.getCacheKey(collection));
     }
 
     // Empty cache for all found keys

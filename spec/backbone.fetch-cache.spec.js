@@ -519,14 +519,16 @@ describe('Backbone.fetchCache', function() {
         beforeEach(function() {
           var cache = {};
           this.model.collection = this.collection;
-          cache[this.collection.url] = [{ some: 'data' }];
+          cache[Backbone.fetchCache.getCacheKey(this.collection)] = [{ some: 'data' }];
           localStorage.setItem('backboneCache', JSON.stringify(cache));
           Backbone.fetchCache.getLocalStorage();
         });
 
         it('clears the cache for the collection', function() {
           this.model.sync('create', this.model, {});
-          expect(Backbone.fetchCache._cache[this.collection.url])
+          expect(Backbone.fetchCache._cache[
+              Backbone.fetchCache.getCacheKey(this.collection)
+              ])
             .toBeUndefined();
         });
       });

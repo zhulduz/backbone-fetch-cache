@@ -450,9 +450,11 @@ describe('Backbone.fetchCache', function() {
         it('triggers sync on prefill success and success', function() {
           var prefillSuccess = jasmine.createSpy('prefillSuccess'),
               success = jasmine.createSpy('success'),
-              sync = jasmine.createSpy('sync');
+              sync = jasmine.createSpy('sync'),
+              cachesync = jasmine.createSpy('cachesync');
 
           this.model.bind('sync', sync);
+          this.model.bind('cachesync', cachesync);
 
           this.model.fetch({
             prefill: true,
@@ -463,7 +465,13 @@ describe('Backbone.fetchCache', function() {
           expect(sync).toHaveBeenCalled();
           expect(sync.callCount).toEqual(1);
 
+          expect(cachesync).toHaveBeenCalled();
+          expect(cachesync.callCount).toEqual(1);
+
           this.server.respond();
+
+          // Ensure cachesync was not called on this second go around
+          expect(cachesync.callCount).toEqual(1);
 
           expect(sync).toHaveBeenCalled();
           expect(sync.callCount).toEqual(2);

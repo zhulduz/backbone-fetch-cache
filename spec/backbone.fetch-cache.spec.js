@@ -89,7 +89,9 @@ describe('Backbone.fetchCache', function() {
       it('does not cache if cache: false is passed', function() {
         this.opts.cache = false;
         Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
-        expect(Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(this.model.url, this.opts)]).toBeUndefined();
+        expect(Backbone.fetchCache._cache[
+            Backbone.fetchCache.getCacheKey(this.model.url, this.opts)
+            ]).toBeUndefined();
       });
 
     });
@@ -119,7 +121,9 @@ describe('Backbone.fetchCache', function() {
       it('is not set if expires: false is set', function() {
         var opts = { cache: true, expires: false };
         Backbone.fetchCache.setCache(this.model, opts, this.modelResponse);
-        expect(Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(this.model.url, this.opts)].expires)
+        expect(Backbone.fetchCache._cache[
+            Backbone.fetchCache.getCacheKey(this.model.url, this.opts)
+            ].expires)
           .toEqual(false);
       });
     });

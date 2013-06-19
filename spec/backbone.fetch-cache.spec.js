@@ -286,7 +286,9 @@ describe('Backbone.fetchCache', function() {
       it('saves returned attributes to the attributeCache', function() {
         this.model.fetch({ cache: true });
         this.server.respond();
-        expect(Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(this.model.url)].value).toEqual(this.model.toJSON());
+        expect(Backbone.fetchCache._cache[
+            Backbone.fetchCache.getCacheKey(this.model.url)].value
+        ).toEqual(this.model.toJSON());
       });
 
       it('passes the instance and options through to setCache', function() {

@@ -52,8 +52,13 @@
     Backbone.fetchCache.localStorage = true;
   }
 
-  function getCacheKey(url, opts){
-    if(opts && opts.data){
+  function getCacheKey(instance, opts) {
+    var url = _.isFunction(instance.url) ? instance.url() : instance.url;
+
+    // Need url to use as cache key so return if we can't get it
+    if(!url) { return; }
+
+    if(opts && opts.data) {
       return url + "?" + $.param(opts.data);
     }
     return url;
@@ -61,11 +66,11 @@
   // Shared methods
   function setCache(instance, opts, attrs) {
     opts = (opts || {});
-    var url = _.isFunction(instance.url) ? instance.url() : instance.url,
+    var key = Backbone.fetchCache.getCacheKey(instance, opts),
         expires = false;
 
     // Need url to use as cache key so return if we can't get it
-    if (!url) { return; }
+    if (!key) { return; }
 
     // Never set the cache if user has explicitly said not to
     if (opts.cache === false) { return; }
@@ -77,7 +82,7 @@
       expires = (new Date()).getTime() + ((opts.expires || 5 * 60) * 1000);
     }
 
-    Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(url, opts)] = {
+    Backbone.fetchCache._cache[key] = {
       expires: expires,
       value: attrs
     };
@@ -86,7 +91,11 @@
   }
 
   function clearItem(key) {
-    delete Backbone.fetchCache._cache[key];
+    for(var k in Backbone.fetchCache._cache) {
+      if(k.indexOf(key) === 0) {
+        delete Backbone.fetchCache._cache[k];
+      }
+    }
   }
 
   function setLocalStorage() {
@@ -112,8 +121,8 @@
   // Instance methods
   Backbone.Model.prototype.fetch = function(opts) {
     opts = (opts || {});
-    var url = _.isFunction(this.url) ? this.url() : this.url,
-        data = Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(url, opts)],
+    var key = Backbone.fetchCache.getCacheKey(this, opts),
+        data = Backbone.fetchCache._cache[key],
         expired = false,
         attributes = false,
         promise = new $.Deferred();
@@ -179,8 +188,8 @@
 
   Backbone.Collection.prototype.fetch = function(opts) {
     opts = (opts || {});
-    var url = _.isFunction(this.url) ? this.url() : this.url,
-        data = Backbone.fetchCache._cache[Backbone.fetchCache.getCacheKey(url, opts)],
+    var key = Backbone.fetchCache.getCacheKey(this, opts),
+        data = Backbone.fetchCache._cache[key],
         expired = false,
         attributes = false,
         promise = new $.Deferred();

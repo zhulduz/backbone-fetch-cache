@@ -193,6 +193,10 @@
       this[opts.reset ? 'reset' : 'set'](this.parse(attributes), opts);
       if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this); }
 
+      // Trigger sync events
+      this.trigger('cachesync', this, attributes, opts);
+      this.trigger('sync', this, attributes, opts);
+
       // Notify progress if we're still waiting for an AJAX call to happen...
       if (opts.prefill) { promise.notify(this); }
       // ...finish and return if we're not

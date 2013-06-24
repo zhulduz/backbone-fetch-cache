@@ -754,6 +754,39 @@ describe('Backbone.fetchCache', function() {
           expect(success.calls[0].args[1]).toEqual(this.collectionResponse);
         });
 
+        it('triggers sync on prefill success and success', function() {
+          var prefillSuccess = jasmine.createSpy('prefillSuccess'),
+              success = jasmine.createSpy('success'),
+              sync = jasmine.createSpy('sync'),
+              cachesync = jasmine.createSpy('cachesync');
+
+          this.collection.bind('sync', sync);
+          this.collection.bind('cachesync', cachesync);
+
+          this.collection.fetch({
+            prefill: true,
+            success: success,
+            prefillSuccess: prefillSuccess
+          });
+
+          expect(sync).toHaveBeenCalled();
+          expect(sync.callCount).toEqual(1);
+
+          expect(cachesync).toHaveBeenCalled();
+          expect(cachesync.callCount).toEqual(1);
+
+          this.server.respond();
+
+          // Ensure cachesync was not called on this second go around
+          expect(cachesync.callCount).toEqual(1);
+
+          expect(sync).toHaveBeenCalled();
+          expect(sync.callCount).toEqual(2);
+
+          expect(success.calls[0].args[0]).toEqual(this.collection);
+          expect(success.calls[0].args[1]).toEqual(this.collectionResponse);
+        });
+
         it('triggers progress on the promise on cache hit', function() {
           var progress = jasmine.createSpy('progeress');
           this.collection.fetch({ prefill: true }).progress(progress);

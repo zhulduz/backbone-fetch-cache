@@ -130,6 +130,10 @@ Backbone.fetchCache.priorityFn = function(a, b) {
 };
 ```
 
+## Events
+
+The `sync` event is triggered on a cache hit. A `cachesync` event is also triggered on Models and Collections, but only when a cache hit happens. This can be used if you need to differentiate between a server backed `sync` event and a cache backed event.
+
 ## Automatic cache invalidation
 The cache item for a particular call will be cleared when a `create`, `update`, `patch` or `delete` call is made to the server. The plugin tries to be intelligent about this by clearing a model's collection cache if the model has a `.collection property`.
 

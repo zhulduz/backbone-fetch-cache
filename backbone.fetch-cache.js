@@ -120,7 +120,11 @@
 
     if (!expired && (opts.cache || opts.prefill) && attributes) {
       this.set(this.parse(attributes), opts);
-      if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this); }
+      if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this, attributes, opts); }
+
+      // Trigger sync events
+      this.trigger('cachesync', this, attributes, opts);
+      this.trigger('sync', this, attributes, opts);
 
       // Notify progress if we're still waiting for an AJAX call to happen...
       if (opts.prefill) { promise.notify(this); }

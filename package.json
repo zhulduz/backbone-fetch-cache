@@ -3,6 +3,7 @@
   "version": "0.1.8",
   "author": "Andy Appleton",
   "description": "Caches calls to Backbone.[Model | Collection].fetch",
+  "license": "MIT",
   "scripts": {
     "test": "grunt"
   },

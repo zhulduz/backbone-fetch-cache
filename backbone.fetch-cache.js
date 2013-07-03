@@ -81,6 +81,7 @@
 
   function clearItem(key) {
     delete Backbone.fetchCache._cache[key];
+    Backbone.fetchCache.setLocalStorage();
   }
 
   function setLocalStorage() {

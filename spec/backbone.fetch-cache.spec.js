@@ -136,6 +136,12 @@ describe('Backbone.fetchCache', function() {
       expect(Backbone.fetchCache._cache['/item/1']).toBeUndefined();
       expect(Backbone.fetchCache._cache['/item/2']).toEqual({ beep: 'boop' });
     });
+
+    it('updates localStorage', function() {
+      spyOn(Backbone.fetchCache, 'setLocalStorage');
+      Backbone.fetchCache.clearItem('/item/1');
+      expect(Backbone.fetchCache.setLocalStorage).toHaveBeenCalled();
+    });
   });
 
   describe('.setLocalStorage', function() {

@@ -61,9 +61,10 @@ describe('Backbone.fetchCache', function() {
       expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
     });
 
-    it('keys cache items by URL',function() {
+    it('keys cache items by the getCacheKey method',function() {
+      spyOn(Backbone.fetchCache, 'getCacheKey').andReturn('someCacheKey');
       Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
-      expect(Backbone.fetchCache._cache[this.model.url].value)
+      expect(Backbone.fetchCache._cache['someCacheKey'].value)
         .toEqual(this.modelResponse);
     });
 
@@ -79,22 +80,27 @@ describe('Backbone.fetchCache', function() {
       });
 
       it('caches even if cache: true is not passed', function() {
+        var cacheKey = Backbone.fetchCache.getCacheKey(this.model, this.opts);
         Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
-        expect(Backbone.fetchCache._cache[this.model.url].value)
+        expect(Backbone.fetchCache._cache[cacheKey].value)
           .toEqual(this.modelResponse);
       });
 
       it('does not cache if cache: false is passed', function() {
+        var cacheKey = Backbone.fetchCache.getCacheKey(this.model, this.opts);
         this.opts.cache = false;
         Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
-        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+        expect(Backbone.fetchCache._cache[cacheKey]).toBeUndefined();
       });
 
     });
 
     describe('cache expiry', function() {
+      var cacheKey;
+
       beforeEach(function() {
         this.clock = sinon.useFakeTimers();
+        cacheKey = Backbone.fetchCache.getCacheKey(this.model, this.opts);
       });
 
       afterEach(function() {
@@ -103,21 +109,21 @@ describe('Backbone.fetchCache', function() {
 
       it('sets default expiry times for cache keys', function() {
         Backbone.fetchCache.setCache(this.model, { cache: true }, this.modelResponse);
-        expect(Backbone.fetchCache._cache[this.model.url].expires)
+        expect(Backbone.fetchCache._cache[cacheKey].expires)
           .toEqual((new Date()).getTime() + (5* 60 * 1000));
       });
 
       it('sets expiry times for cache keys', function() {
         var opts = { cache: true, expires: 1000 };
         Backbone.fetchCache.setCache(this.model, opts, this.modelResponse);
-        expect(Backbone.fetchCache._cache[this.model.url].expires)
+        expect(Backbone.fetchCache._cache[cacheKey].expires)
           .toEqual((new Date()).getTime() + (opts.expires * 1000));
       });
 
       it('is not set if expires: false is set', function() {
         var opts = { cache: true, expires: false };
         Backbone.fetchCache.setCache(this.model, opts, this.modelResponse);
-        expect(Backbone.fetchCache._cache[this.model.url].expires)
+        expect(Backbone.fetchCache._cache[cacheKey].expires)
           .toEqual(false);
       });
     });
@@ -280,7 +286,8 @@ describe('Backbone.fetchCache', function() {
         localStorage.setItem('backboneCache', JSON.stringify(cache));
         Backbone.fetchCache.getLocalStorage();
         Backbone.fetchCache._deleteCacheWithPriority();
-        expect(Backbone.fetchCache._cache).toEqual({'/url2': { expires: 1500, value: { egg: 'roll' } }});
+        expect(Backbone.fetchCache._cache)
+          .toEqual({'/url2': { expires: 1500, value: { egg: 'roll' } }});
       });
     });
   });
@@ -288,9 +295,11 @@ describe('Backbone.fetchCache', function() {
   describe('Backbone.Model', function() {
     describe('.prototype.fetch', function() {
       it('saves returned attributes to the attributeCache', function() {
+        var cacheKey = Backbone.fetchCache.getCacheKey(this.model);
         this.model.fetch({ cache: true });
         this.server.respond();
-        expect(Backbone.fetchCache._cache[this.model.url].value).toEqual(this.model.toJSON());
+        expect(Backbone.fetchCache._cache[cacheKey].value)
+          .toEqual(this.model.toJSON());
       });
 
       it('passes the instance and options through to setCache', function() {
@@ -551,15 +560,15 @@ describe('Backbone.fetchCache', function() {
         beforeEach(function() {
           var cache = {};
           this.model.collection = this.collection;
-          cache[this.collection.url] = [{ some: 'data' }];
+          cache[Backbone.fetchCache.getCacheKey(this.collection)] = [{ some: 'data' }];
           localStorage.setItem('backboneCache', JSON.stringify(cache));
           Backbone.fetchCache.getLocalStorage();
         });
 
         it('clears the cache for the collection', function() {
+          var cacheKey = Backbone.fetchCache.getCacheKey(this.collection);
           this.model.sync('create', this.model, {});
-          expect(Backbone.fetchCache._cache[this.collection.url])
-            .toBeUndefined();
+          expect(Backbone.fetchCache._cache[cacheKey]).toBeUndefined();
         });
       });
     });

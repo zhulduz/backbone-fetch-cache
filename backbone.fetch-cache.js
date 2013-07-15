@@ -91,12 +91,7 @@
   }
 
   function clearItem(key) {
-    // remove all key starting with some key
-    _.each(_.keys(Backbone.fetchCache._cache), function(k) {
-      if (k.indexOf(key) === 0) {
-        delete Backbone.fetchCache._cache[k];
-      }
-    });
+    delete Backbone.fetchCache._cache[key];
   }
 
   function setLocalStorage() {

@@ -109,6 +109,25 @@ By default the cache is persisted in localStorage (if available). Set `Backbone.
 Backbone.fetchCache.localStorage = false;
 ```
 
+### Custom cache keys
+
+By default the cache key is generated from the model's `url` property and the requests params:
+
+```js
+'/model/1?some=param'
+```
+
+This can be overridden with custom logic if required:
+
+```js
+// Instance is a Backbone.Model or Backbone.Collection, options are passed
+// through form the fetch call
+Backbone.fetchCache.getCacheKey = function(instance, options) {
+  return instance.constructor.name + ':' + instamce.get('id');
+  // => UserModel:1
+};
+```
+
 ### `priorityFn`
 When setting items in localStorage, the browser may throw a ```QUOTA_EXCEEDED_ERR```, meaning the store is full. Backbone.fetchCache tries to work around this problem by deleting what it considers the most stale item to make space for the new data. The staleness of data is determined by the sorting function ```priorityFn````, which by default returns the oldest item.
 

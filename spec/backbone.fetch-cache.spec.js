@@ -1,24 +1,26 @@
 describe('Backbone.fetchCache', function() {
+  var model, collection, server, modelResponse, collectionResponse;
   var originalPriorityFn = Backbone.fetchCache.priorityFn;
+
   beforeEach(function() {
-    this.model = new Backbone.Model();
-    this.model.url = '/model-cache-test';
-    this.collection = new Backbone.Collection();
-    this.collection.url = '/collection-cache-test';
+    model = new Backbone.Model();
+    model.url = '/model-cache-test';
+    collection = new Backbone.Collection();
+    collection.url = '/collection-cache-test';
 
     // Mock xhr resposes
-    this.server = sinon.fakeServer.create();
-    this.modelResponse = { sausages: 'bacon' };
-    this.collectionResponse = [{ sausages: 'bacon' }, { rice: 'peas' }];
-    this.server.respondWith('GET', this.model.url, [
+    server = sinon.fakeServer.create();
+    modelResponse = { sausages: 'bacon' };
+    collectionResponse = [{ sausages: 'bacon' }, { rice: 'peas' }];
+    server.respondWith('GET', model.url, [
       200,
       { "Content-Type": "application/json" },
-      JSON.stringify(this.modelResponse)
+      JSON.stringify(modelResponse)
     ]);
-    this.server.respondWith('GET', this.collection.url, [
+    server.respondWith('GET', collection.url, [
       200,
       { "Content-Type": "application/json" },
-      JSON.stringify(this.collectionResponse)
+      JSON.stringify(collectionResponse)
     ]);
   });
 
@@ -26,7 +28,7 @@ describe('Backbone.fetchCache', function() {
     Backbone.fetchCache._cache = {};
     localStorage.clear('backboneCache');
     Backbone.fetchCache.priorityFn = originalPriorityFn;
-    this.server.restore();
+    server.restore();
   });
 
   describe('AMD', function() {
@@ -46,50 +48,52 @@ describe('Backbone.fetchCache', function() {
   });
 
   describe('.setCache', function() {
+    var opts;
+
     beforeEach(function() {
-      this.opts = { cache: true };
+      opts = { cache: true };
     });
 
     it('noops if the instance does not have a url', function() {
-      this.model.url = null;
-      Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
-      expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      model.url = null;
+      Backbone.fetchCache.setCache(model, opts, modelResponse);
+      expect(Backbone.fetchCache._cache[model.url]).toBeUndefined();
     });
 
     it('noops unless cache: true is passed', function() {
-      Backbone.fetchCache.setCache(this.model, null, this.modelResponse);
-      expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+      Backbone.fetchCache.setCache(model, null, modelResponse);
+      expect(Backbone.fetchCache._cache[model.url]).toBeUndefined();
     });
 
     it('keys cache items by the getCacheKey method',function() {
       spyOn(Backbone.fetchCache, 'getCacheKey').andReturn('someCacheKey');
-      Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
+      Backbone.fetchCache.setCache(model, opts, modelResponse);
       expect(Backbone.fetchCache._cache['someCacheKey'].value)
-        .toEqual(this.modelResponse);
+        .toEqual(modelResponse);
     });
 
     it('calls setLocalStorage', function() {
       spyOn(Backbone.fetchCache, 'setLocalStorage');
-      Backbone.fetchCache.setCache(this.model, this.opts);
+      Backbone.fetchCache.setCache(model, opts);
       expect(Backbone.fetchCache.setLocalStorage).toHaveBeenCalled();
     });
 
     describe('with prefill: true option', function() {
       beforeEach(function() {
-        this.opts = { prefill: true };
+        opts = { prefill: true };
       });
 
       it('caches even if cache: true is not passed', function() {
-        var cacheKey = Backbone.fetchCache.getCacheKey(this.model, this.opts);
-        Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
+        var cacheKey = Backbone.fetchCache.getCacheKey(model, opts);
+        Backbone.fetchCache.setCache(model, opts, modelResponse);
         expect(Backbone.fetchCache._cache[cacheKey].value)
-          .toEqual(this.modelResponse);
+          .toEqual(modelResponse);
       });
 
       it('does not cache if cache: false is passed', function() {
-        var cacheKey = Backbone.fetchCache.getCacheKey(this.model, this.opts);
-        this.opts.cache = false;
-        Backbone.fetchCache.setCache(this.model, this.opts, this.modelResponse);
+        var cacheKey = Backbone.fetchCache.getCacheKey(model, opts);
+        opts.cache = false;
+        Backbone.fetchCache.setCache(model, this.opts, modelResponse);
         expect(Backbone.fetchCache._cache[cacheKey]).toBeUndefined();
       });
 
@@ -100,7 +104,7 @@ describe('Backbone.fetchCache', function() {
 
       beforeEach(function() {
         this.clock = sinon.useFakeTimers();
-        cacheKey = Backbone.fetchCache.getCacheKey(this.model, this.opts);
+        cacheKey = Backbone.fetchCache.getCacheKey(model, this.opts);
       });
 
       afterEach(function() {
@@ -108,21 +112,21 @@ describe('Backbone.fetchCache', function() {
       });
 
       it('sets default expiry times for cache keys', function() {
-        Backbone.fetchCache.setCache(this.model, { cache: true }, this.modelResponse);
+        Backbone.fetchCache.setCache(model, { cache: true }, modelResponse);
         expect(Backbone.fetchCache._cache[cacheKey].expires)
           .toEqual((new Date()).getTime() + (5* 60 * 1000));
       });
 
       it('sets expiry times for cache keys', function() {
         var opts = { cache: true, expires: 1000 };
-        Backbone.fetchCache.setCache(this.model, opts, this.modelResponse);
+        Backbone.fetchCache.setCache(model, opts, modelResponse);
         expect(Backbone.fetchCache._cache[cacheKey].expires)
           .toEqual((new Date()).getTime() + (opts.expires * 1000));
       });
 
       it('is not set if expires: false is set', function() {
         var opts = { cache: true, expires: false };
-        Backbone.fetchCache.setCache(this.model, opts, this.modelResponse);
+        Backbone.fetchCache.setCache(model, opts, modelResponse);
         expect(Backbone.fetchCache._cache[cacheKey].expires)
           .toEqual(false);
       });
@@ -295,102 +299,102 @@ describe('Backbone.fetchCache', function() {
   describe('Backbone.Model', function() {
     describe('.prototype.fetch', function() {
       it('saves returned attributes to the attributeCache', function() {
-        var cacheKey = Backbone.fetchCache.getCacheKey(this.model);
-        this.model.fetch({ cache: true });
-        this.server.respond();
+        var cacheKey = Backbone.fetchCache.getCacheKey(model);
+        model.fetch({ cache: true });
+        server.respond();
         expect(Backbone.fetchCache._cache[cacheKey].value)
-          .toEqual(this.model.toJSON());
+          .toEqual(model.toJSON());
       });
 
       it('passes the instance and options through to setCache', function() {
         var opts = { banana: 'bread' };
         spyOn(Backbone.fetchCache, 'setCache');
 
-        this.model.fetch(opts);
-        this.server.respond();
+        model.fetch(opts);
+        server.respond();
 
-        expect(Backbone.fetchCache.setCache.calls[0].args[0]).toEqual(this.model);
+        expect(Backbone.fetchCache.setCache.calls[0].args[0]).toEqual(model);
         expect(Backbone.fetchCache.setCache.calls[0].args[1]).toEqual(opts);
       });
 
       it('returns data from the cache if cache: true is set', function() {
         var cacheData = { cheese: 'pickle' };
-        Backbone.fetchCache._cache[this.model.url] = {
+        Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
-        this.model.fetch({ cache: true });
-        expect(this.model.toJSON()).toEqual(cacheData);
+        model.fetch({ cache: true });
+        expect(model.toJSON()).toEqual(cacheData);
       });
 
       it('does not return cache data if cache: true is not set', function() {
         var cacheData = { cheese: 'pickle' };
-        Backbone.fetchCache._cache[this.model.url] = {
+        Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        this.model.fetch();
-        this.server.respond();
+        model.fetch();
+        server.respond();
 
-        expect(this.model.toJSON()).not.toEqual(cacheData);
-        expect(this.model.toJSON()).toEqual(this.modelResponse);
+        expect(model.toJSON()).not.toEqual(cacheData);
+        expect(model.toJSON()).toEqual(modelResponse);
       });
 
       it('does not return cache data if the cache item is stale', function() {
         var cacheData = { cheese: 'pickle' };
-        Backbone.fetchCache._cache[this.model.url] = {
+        Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() - (5* 60 * 1000)
         };
 
-        this.model.fetch();
-        this.server.respond();
+        model.fetch();
+        server.respond();
 
-        expect(this.model.toJSON()).not.toEqual(cacheData);
-        expect(this.model.toJSON()).toEqual(this.modelResponse);
+        expect(model.toJSON()).not.toEqual(cacheData);
+        expect(model.toJSON()).toEqual(modelResponse);
       });
 
       it('returns cache data if the item has expires: false', function() {
         var cacheData = { cheese: 'pickle' };
-        Backbone.fetchCache._cache[this.model.url] = {
+        Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: false
         };
 
-        this.model.fetch({ cache: true });
+        model.fetch({ cache: true });
 
-        expect(this.model.toJSON()).toEqual(cacheData);
+        expect(model.toJSON()).toEqual(cacheData);
       });
 
       it('calls success callback on a cache hit', function() {
         var success = jasmine.createSpy('success'),
             cacheData = { cheese: 'pickle' };
-        Backbone.fetchCache._cache[this.model.url] = {
+        Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        this.model.fetch({ cache: true, success: success });
+        model.fetch({ cache: true, success: success });
 
-        expect(success).toHaveBeenCalledWith(this.model);
+        expect(success).toHaveBeenCalledWith(model);
       });
 
       it('returns a fulfilled promise on a cache hit', function() {
         var cacheData = { cheese: 'pickle' },
             promise;
-        Backbone.fetchCache._cache[this.model.url] = {
+        Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
-        promise = this.model.fetch({ cache: true });
+        promise = model.fetch({ cache: true });
 
         expect(promise).toBeAPromise();
         expect(promise).toBeResolved();
       });
 
       it('returns an unfulfilled promise on a cache miss', function() {
-        var promise = this.model.fetch();
+        var promise = model.fetch();
         expect(promise).toBeAPromise();
         expect(promise).toBeUnresolved();
       });
@@ -400,44 +404,46 @@ describe('Backbone.fetchCache', function() {
             spy = jasmine.createSpy('success'),
             opts = { cache: true };
 
-        Backbone.fetchCache._cache[this.model.url] = {
+        Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        this.model.fetch(opts).done(spy);
+        model.fetch(opts).done(spy);
 
-        expect(spy).toHaveBeenCalledWith(this.model);
+        expect(spy).toHaveBeenCalledWith(model);
       });
 
       it('rejects the returned promise on AJAX error', function() {
         var spy = jasmine.createSpy('error');
 
-        this.model.url = '/non-existant';
-        this.model.fetch().fail(spy);
-        this.server.respond();
+        model.url = '/non-existant';
+        model.fetch().fail(spy);
+        server.respond();
 
         expect(spy).toHaveBeenCalled();
       });
 
       describe('with prefill: true option', function() {
+        var cacheData;
+
         beforeEach(function(){
-          this.cacheData = { cheese: 'pickle' };
-          Backbone.fetchCache._cache[this.model.url] = {
-            value: this.cacheData,
+          cacheData = { cheese: 'pickle' };
+          Backbone.fetchCache._cache[model.url] = {
+            value: cacheData,
             expires: (new Date()).getTime() + (5* 60 * 1000)
           };
         });
 
         it('sets cache data and makes an xhr request', function() {
-          this.model.fetch({ prefill: true });
-          expect(this.model.toJSON()).toEqual(this.cacheData);
+          model.fetch({ prefill: true });
+          expect(model.toJSON()).toEqual(cacheData);
 
-          this.server.respond();
+          server.respond();
 
-          for (var key in this.modelResponse) {
-            if (this.modelResponse.hasOwnProperty(key)) {
-              expect(this.model.toJSON()[key]).toEqual(this.modelResponse[key]);
+          for (var key in modelResponse) {
+            if (modelResponse.hasOwnProperty(key)) {
+              expect(model.toJSON()[key]).toEqual(modelResponse[key]);
             }
           }
         });
@@ -446,20 +452,20 @@ describe('Backbone.fetchCache', function() {
           var prefillSuccess = jasmine.createSpy('prefillSuccess'),
               success = jasmine.createSpy('success');
 
-          this.model.fetch({
+          model.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
           });
 
-          expect(prefillSuccess.calls[0].args[0]).toEqual(this.model);
-          expect(prefillSuccess.calls[0].args[1]).toEqual(this.model.attributes);
+          expect(prefillSuccess.calls[0].args[0]).toEqual(model);
+          expect(prefillSuccess.calls[0].args[1]).toEqual(model.attributes);
           expect(success).not.toHaveBeenCalled();
 
-          this.server.respond();
+          server.respond();
 
-          expect(success.calls[0].args[0]).toEqual(this.model);
-          expect(success.calls[0].args[1]).toEqual(this.modelResponse);
+          expect(success.calls[0].args[0]).toEqual(model);
+          expect(success.calls[0].args[1]).toEqual(modelResponse);
         });
 
         it('triggers sync on prefill success and success', function() {
@@ -468,10 +474,10 @@ describe('Backbone.fetchCache', function() {
               sync = jasmine.createSpy('sync'),
               cachesync = jasmine.createSpy('cachesync');
 
-          this.model.bind('sync', sync);
-          this.model.bind('cachesync', cachesync);
+          model.bind('sync', sync);
+          model.bind('cachesync', cachesync);
 
-          this.model.fetch({
+          model.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
@@ -483,7 +489,7 @@ describe('Backbone.fetchCache', function() {
           expect(cachesync).toHaveBeenCalled();
           expect(cachesync.callCount).toEqual(1);
 
-          this.server.respond();
+          server.respond();
 
           // Ensure cachesync was not called on this second go around
           expect(cachesync.callCount).toEqual(1);
@@ -491,83 +497,85 @@ describe('Backbone.fetchCache', function() {
           expect(sync).toHaveBeenCalled();
           expect(sync.callCount).toEqual(2);
 
-          expect(success.calls[0].args[0]).toEqual(this.model);
-          expect(success.calls[0].args[1]).toEqual(this.modelResponse);
+          expect(success.calls[0].args[0]).toEqual(model);
+          expect(success.calls[0].args[1]).toEqual(modelResponse);
         });
 
         it('triggers progress on the promise on cache hit', function() {
           var progress = jasmine.createSpy('progress');
-          this.model.fetch({ prefill: true }).progress(progress);
-          expect(progress).toHaveBeenCalledWith(this.model);
+          model.fetch({ prefill: true }).progress(progress);
+          expect(progress).toHaveBeenCalledWith(model);
         });
 
         it('fulfills the promise on AJAX success', function() {
           var success = jasmine.createSpy('success');
-          this.model.fetch({ prefill: true }).done(success);
-          this.server.respond();
+          model.fetch({ prefill: true }).done(success);
+          server.respond();
 
-          expect(success.calls[0].args[0]).toEqual(this.model);
-          expect(success.calls[0].args[1]).toEqual(this.modelResponse);
+          expect(success.calls[0].args[0]).toEqual(model);
+          expect(success.calls[0].args[1]).toEqual(modelResponse);
         });
       });
     });
 
     describe('.prototype.sync', function() {
+      var cacheData;
+
       beforeEach(function() {
         var cache = {};
-        this.data = { some: 'data' };
-        cache[this.model.url] = this.data;
+        cacheData = { some: 'data' };
+        cache[model.url] = cacheData;
         localStorage.setItem('backboneCache', JSON.stringify(cache));
         Backbone.fetchCache.getLocalStorage();
       });
 
       it('clears the cache for the model on create', function() {
-        this.model.sync('create', this.model, {});
-        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+        model.sync('create', model, {});
+        expect(Backbone.fetchCache._cache[model.url]).toBeUndefined();
       });
 
       it('clears the cache for the model on update', function() {
-        this.model.sync('update', this.model, {});
-        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+        model.sync('update', model, {});
+        expect(Backbone.fetchCache._cache[model.url]).toBeUndefined();
       });
 
       it('clears the cache for the model on patch', function() {
-        this.model.sync('create', this.model, {});
-        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+        model.sync('create', model, {});
+        expect(Backbone.fetchCache._cache[model.url]).toBeUndefined();
       });
 
       it('clears the cache for the model on delete', function() {
-        this.model.sync('create', this.model, {});
-        expect(Backbone.fetchCache._cache[this.model.url]).toBeUndefined();
+        model.sync('create', model, {});
+        expect(Backbone.fetchCache._cache[model.url]).toBeUndefined();
       });
 
       it('does not clear the cache for the model on read', function() {
-        this.model.sync('read', this.model, {});
-        expect(Backbone.fetchCache._cache[this.model.url]).toEqual(this.data);
+        model.sync('read', model, {});
+        expect(Backbone.fetchCache._cache[model.url]).toEqual(cacheData);
       });
 
       it('calls super', function() {
         spyOn(Backbone.fetchCache._superMethods, 'modelSync');
-        this.model.sync('create', this.model, {});
+        model.sync('create', model, {});
         expect(Backbone.fetchCache._superMethods.modelSync).toHaveBeenCalled();
       });
 
       it('returns the result of calling super', function() {
-        expect(this.model.sync('create', this.model, {})).toBeAPromise();
+        expect(model.sync('create', model, {})).toBeAPromise();
       });
 
       describe('with an associated collection', function() {
         beforeEach(function() {
           var cache = {};
-          this.model.collection = this.collection;
-          cache[Backbone.fetchCache.getCacheKey(this.collection)] = [{ some: 'data' }];
+          model.collection = collection;
+          cache[Backbone.fetchCache.getCacheKey(collection)] = [{ some: 'data' }];
           localStorage.setItem('backboneCache', JSON.stringify(cache));
           Backbone.fetchCache.getLocalStorage();
         });
 
         it('clears the cache for the collection', function() {
-          var cacheKey = Backbone.fetchCache.getCacheKey(this.collection);
-          this.model.sync('create', this.model, {});
+          var cacheKey = Backbone.fetchCache.getCacheKey(collection);
+          model.sync('create', model, {});
           expect(Backbone.fetchCache._cache[cacheKey]).toBeUndefined();
         });
       });
@@ -577,133 +585,133 @@ describe('Backbone.fetchCache', function() {
   describe('Backbone.Collection', function() {
     describe('.prototype.fetch', function() {
       it('saves returned attributes to the attributeCache', function() {
-        this.collection.fetch({ cache: true });
-        this.server.respond();
-        expect(Backbone.fetchCache._cache[this.collection.url].value)
-          .toEqual(this.collection.toJSON());
+        collection.fetch({ cache: true });
+        server.respond();
+        expect(Backbone.fetchCache._cache[collection.url].value)
+          .toEqual(collection.toJSON());
       });
 
       it('passes the instance and options through to setCache', function() {
         var opts = { banana: 'bread' };
         spyOn(Backbone.fetchCache, 'setCache');
 
-        this.collection.fetch(opts);
-        this.server.respond();
+        collection.fetch(opts);
+        server.respond();
 
-        expect(Backbone.fetchCache.setCache.calls[0].args[0]).toEqual(this.collection);
+        expect(Backbone.fetchCache.setCache.calls[0].args[0]).toEqual(collection);
         expect(Backbone.fetchCache.setCache.calls[0].args[1]).toEqual(opts);
       });
 
       it('returns data from the cache if cache: true is set', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
-        Backbone.fetchCache._cache[this.collection.url] = {
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
-        this.collection.fetch({ cache: true });
-        expect(this.collection.toJSON()).toEqual(cacheData);
+        collection.fetch({ cache: true });
+        expect(collection.toJSON()).toEqual(cacheData);
       });
 
       it('does not return cache data if cache: true is not set', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
-        Backbone.fetchCache._cache[this.collection.url] = {
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        this.collection.fetch();
-        this.server.respond();
+        collection.fetch();
+        server.respond();
 
-        expect(this.collection.toJSON()).not.toEqual(cacheData);
-        expect(this.collection.toJSON()).toEqual(this.collectionResponse);
+        expect(collection.toJSON()).not.toEqual(cacheData);
+        expect(collection.toJSON()).toEqual(collectionResponse);
       });
 
       it('does not return cache data if the cache item is stale', function() {
         var cacheData = { cheese: 'pickle' };
-        Backbone.fetchCache._cache[this.collection.url] = {
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() - (5* 60 * 1000)
         };
 
-        this.collection.fetch();
-        this.server.respond();
+        collection.fetch();
+        server.respond();
 
-        expect(this.collection.toJSON()).not.toEqual(cacheData);
-        expect(this.collection.toJSON()).toEqual(this.collectionResponse);
+        expect(collection.toJSON()).not.toEqual(cacheData);
+        expect(collection.toJSON()).toEqual(collectionResponse);
       });
 
       it('returns cache data if the item has expires: false', function() {
         var cacheData = [{ cheese: 'pickle' }];
-        Backbone.fetchCache._cache[this.collection.url] = {
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: false
         };
 
-        this.collection.fetch({ cache: true });
+        collection.fetch({ cache: true });
 
-        expect(this.collection.toJSON()).toEqual(cacheData);
+        expect(collection.toJSON()).toEqual(cacheData);
       });
 
       it('calls set according to options on a cache hit', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
             options = { cache: true, remove: false };
 
-        spyOn(this.collection, 'set');
-        Backbone.fetchCache._cache[this.collection.url] = {
+        spyOn(collection, 'set');
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        this.collection.fetch(options);
+        collection.fetch(options);
 
-        expect(this.collection.set).toHaveBeenCalledWith(cacheData, options);
+        expect(collection.set).toHaveBeenCalledWith(cacheData, options);
       });
 
       it('calls reset according to options on a cache hit', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
             options = { cache: true, reset: true };
 
-        spyOn(this.collection, 'reset');
-        Backbone.fetchCache._cache[this.collection.url] = {
+        spyOn(collection, 'reset');
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        this.collection.fetch(options);
+        collection.fetch(options);
 
-        expect(this.collection.reset).toHaveBeenCalledWith(cacheData, options);
+        expect(collection.reset).toHaveBeenCalledWith(cacheData, options);
       });
 
       it('calls success callback on a cache hit', function() {
         var success = jasmine.createSpy('success'),
             cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
 
-        Backbone.fetchCache._cache[this.collection.url] = {
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        this.collection.fetch({ cache: true, success: success });
+        collection.fetch({ cache: true, success: success });
 
-        expect(success).toHaveBeenCalledWith(this.collection);
+        expect(success).toHaveBeenCalledWith(collection);
       });
 
       it('returns a fulfilled promise on a cache hit', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
             promise;
 
-        Backbone.fetchCache._cache[this.collection.url] = {
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
-        promise = this.collection.fetch({ cache: true });
+        promise = collection.fetch({ cache: true });
 
         expect(promise).toBeAPromise();
         expect(promise).toBeResolved();
       });
 
       it('returns an unfulfilled promise on a cache miss', function() {
-        var promise = this.collection.fetch();
+        var promise = collection.fetch();
         expect(promise).toBeAPromise();
         expect(promise).toBeUnresolved();
       });
@@ -712,61 +720,63 @@ describe('Backbone.fetchCache', function() {
         var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
             spy = jasmine.createSpy('success');
 
-        Backbone.fetchCache._cache[this.collection.url] = {
+        Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        this.collection.fetch({ cache: true }).done(spy);
+        collection.fetch({ cache: true }).done(spy);
 
-        expect(spy).toHaveBeenCalledWith(this.collection);
+        expect(spy).toHaveBeenCalledWith(collection);
       });
 
       it('rejects the returned promise on AJAX error', function() {
         var spy = jasmine.createSpy('error');
 
-        this.collection.url = '/non-existant';
-        this.collection.fetch().fail(spy);
-        this.server.respond();
+        collection.url = '/non-existant';
+        collection.fetch().fail(spy);
+        server.respond();
 
         expect(spy).toHaveBeenCalled();
       });
 
       describe('with prefill: true option', function() {
+        var cacheData;
+
         beforeEach(function(){
-          this.cacheData = [{ cheese: 'pickle' }];
-          Backbone.fetchCache._cache[this.collection.url] = {
-            value: this.cacheData,
+          cacheData = [{ cheese: 'pickle' }];
+          Backbone.fetchCache._cache[collection.url] = {
+            value: cacheData,
             expires: (new Date()).getTime() + (5* 60 * 1000)
           };
         });
 
         it('sets cache data and makes an xhr request', function() {
-          this.collection.fetch({ prefill: true });
-          expect(this.collection.toJSON()).toEqual(this.cacheData);
+          collection.fetch({ prefill: true });
+          expect(collection.toJSON()).toEqual(cacheData);
 
-          this.server.respond();
+          server.respond();
 
-          expect(this.collection.toJSON()).toEqual(this.collectionResponse);
+          expect(collection.toJSON()).toEqual(collectionResponse);
         });
 
         it('calls the prefillSuccess and success callbacks in order', function() {
           var prefillSuccess = jasmine.createSpy('prefillSuccess'),
               success = jasmine.createSpy('success');
 
-          this.collection.fetch({
+          collection.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
           });
 
-          expect(prefillSuccess.calls[0].args[0]).toEqual(this.collection);
-          expect(prefillSuccess.calls[0].args[1]).toEqual(this.collection.attributes);
+          expect(prefillSuccess.calls[0].args[0]).toEqual(collection);
+          expect(prefillSuccess.calls[0].args[1]).toEqual(collection.attributes);
           expect(success).not.toHaveBeenCalled();
 
-          this.server.respond();
-          expect(success.calls[0].args[0]).toEqual(this.collection);
-          expect(success.calls[0].args[1]).toEqual(this.collectionResponse);
+          server.respond();
+          expect(success.calls[0].args[0]).toEqual(collection);
+          expect(success.calls[0].args[1]).toEqual(collectionResponse);
         });
 
         it('triggers sync on prefill success and success', function() {
@@ -775,10 +785,10 @@ describe('Backbone.fetchCache', function() {
               sync = jasmine.createSpy('sync'),
               cachesync = jasmine.createSpy('cachesync');
 
-          this.collection.bind('sync', sync);
-          this.collection.bind('cachesync', cachesync);
+          collection.bind('sync', sync);
+          collection.bind('cachesync', cachesync);
 
-          this.collection.fetch({
+          collection.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
@@ -790,7 +800,7 @@ describe('Backbone.fetchCache', function() {
           expect(cachesync).toHaveBeenCalled();
           expect(cachesync.callCount).toEqual(1);
 
-          this.server.respond();
+          server.respond();
 
           // Ensure cachesync was not called on this second go around
           expect(cachesync.callCount).toEqual(1);
@@ -798,23 +808,23 @@ describe('Backbone.fetchCache', function() {
           expect(sync).toHaveBeenCalled();
           expect(sync.callCount).toEqual(2);
 
-          expect(success.calls[0].args[0]).toEqual(this.collection);
-          expect(success.calls[0].args[1]).toEqual(this.collectionResponse);
+          expect(success.calls[0].args[0]).toEqual(collection);
+          expect(success.calls[0].args[1]).toEqual(collectionResponse);
         });
 
         it('triggers progress on the promise on cache hit', function() {
           var progress = jasmine.createSpy('progeress');
-          this.collection.fetch({ prefill: true }).progress(progress);
-          expect(progress).toHaveBeenCalledWith(this.collection);
+          collection.fetch({ prefill: true }).progress(progress);
+          expect(progress).toHaveBeenCalledWith(collection);
         });
 
         it('fulfills the promise on AJAX success', function() {
           var success = jasmine.createSpy('success');
-          this.collection.fetch({ prefill: true }).done(success);
-          this.server.respond();
+          collection.fetch({ prefill: true }).done(success);
+          server.respond();
 
-          expect(success.calls[0].args[0]).toEqual(this.collection);
-          expect(success.calls[0].args[1]).toEqual(this.collectionResponse);
+          expect(success.calls[0].args[0]).toEqual(collection);
+          expect(success.calls[0].args[1]).toEqual(collectionResponse);
         });
       });
     });

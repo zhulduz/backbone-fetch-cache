@@ -182,6 +182,7 @@ $ grunt
 
 ## Changelog
 
+- v0.1.10: Add getCacheKey function to allow custom cache keys - thanks to [@ebertti](https://github.com/ebertti)
 - v0.1.9: Fixes a bug where clearing a cache item didn't get persisted to localStorage - thanks to [@mzafer](https://github.com/mzafer)
 - v0.1.8: Trigger `sync` and `cachesync` events - thanks to [@victorquinn](https://github.com/victorquinn).
 - v0.1.7: Ensures that `parse` is called for collections - thanks to [@fernandopg](https://github.com/fernandopg).

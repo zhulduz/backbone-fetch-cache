@@ -53,7 +53,13 @@
   }
 
   function getCacheKey(instance, opts) {
-    var url = _.isFunction(instance.url) ? instance.url() : instance.url;
+    var url;
+
+    if(opts && opts.url) {
+      url = opts.url;
+    } else {
+      url = _.isFunction(instance.url) ? instance.url() : instance.url;
+    }
 
     // Need url to use as cache key so return if we can't get it
     if(!url) { return; }

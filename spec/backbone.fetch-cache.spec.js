@@ -50,12 +50,12 @@ describe('Backbone.fetchCache', function() {
   describe('.getCacheKey', function() {
     it('uses options url with priority if set', function() {
       expect(Backbone.fetchCache.getCacheKey(model, {url: '/options-test-url'}))
-	.toEqual('/options-test-url');
+        .toEqual('/options-test-url');
     });
 
     it('uses model url if options url is not set', function() {
       expect(Backbone.fetchCache.getCacheKey(model, {}))
-	.toEqual(model.url);
+        .toEqual(model.url);
     });
   });
 

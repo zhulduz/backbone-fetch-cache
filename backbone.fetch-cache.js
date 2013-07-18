@@ -19,11 +19,11 @@
 
   // Setup
   var superMethods = {
-        modelFetch: Backbone.Model.prototype.fetch,
-        modelSync: Backbone.Model.prototype.sync,
-        collectionFetch: Backbone.Collection.prototype.fetch
-      },
-      supportLocalStorage = typeof window.localStorage !== 'undefined';
+    modelFetch: Backbone.Model.prototype.fetch,
+    modelSync: Backbone.Model.prototype.sync,
+    collectionFetch: Backbone.Collection.prototype.fetch
+  },
+  supportLocalStorage = typeof window.localStorage !== 'undefined';
 
   Backbone.fetchCache = (Backbone.fetchCache || {});
   Backbone.fetchCache._cache = (Backbone.fetchCache._cache || {});

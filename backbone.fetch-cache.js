@@ -212,7 +212,8 @@
         data = Backbone.fetchCache._cache[key],
         expired = false,
         attributes = false,
-        promise = new $.Deferred();
+        promise = new $.Deferred(),
+        self = this;
 
     if (data) {
       expired = data.expires;
@@ -221,20 +222,28 @@
     }
 
     if (!expired && (opts.cache || opts.prefill) && attributes) {
-      this[opts.reset ? 'reset' : 'set'](this.parse(attributes), opts);
-      if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(this); }
+      // Ensure that cache resolution is asynchronous
+      nextTick(function() {
 
-      // Trigger sync events
-      this.trigger('cachesync', this, attributes, opts);
-      this.trigger('sync', this, attributes, opts);
+        self[opts.reset ? 'reset' : 'set'](self.parse(attributes), opts);
+        if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(self); }
 
-      // Notify progress if we're still waiting for an AJAX call to happen...
-      if (opts.prefill) { promise.notify(this); }
-      // ...finish and return if we're not
-      else {
-        if (_.isFunction(opts.success)) { opts.success(this); }
-        // Mimic actual fetch behaviour buy returning a fulfilled promise
-        return promise.resolve(this);
+        // Trigger sync events
+        self.trigger('cachesync', self, attributes, opts);
+        self.trigger('sync', self, attributes, opts);
+
+        // Notify progress if we're still waiting for an AJAX call to happen...
+        if (opts.prefill) { promise.notify(self); }
+        // ...finish and return if we're not
+        else {
+          if (_.isFunction(opts.success)) { opts.success(self); }
+          // Mimic actual fetch behaviour buy returning a fulfilled promise
+          promise.resolve(self);
+        }
+      });
+
+      if (!opts.prefill) {
+        return promise;
       }
     }
 

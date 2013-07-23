@@ -1,5 +1,7 @@
 Changelog
 
+- v1.0.0: Perform all cache fulfilment asynchronously. Only the promise, not the full $.Deferred object is returned from fetch functions.
+
 - v0.1.11: Account for custom URLs to be passed in fetch method options - thanks to [@dincho](https://github.com/dincho)
 - v0.1.10: Add getCacheKey function to allow custom cache keys - thanks to [@ebertti](https://github.com/ebertti)
 - v0.1.9: Fixes a bug where clearing a cache item didn't get persisted to localStorage - thanks to [@mzafer](https://github.com/mzafer)

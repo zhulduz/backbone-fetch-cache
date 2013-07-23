@@ -2,6 +2,25 @@ describe('Backbone.fetchCache', function() {
   var model, collection, server, modelResponse, collectionResponse;
   var originalPriorityFn = Backbone.fetchCache.priorityFn;
 
+  // Async spec waitsFor helpers
+  function promiseComplete(promise) {
+    return function() {
+      return promise.state() !== 'pending';
+    };
+  }
+
+  function promiseNotified(promise) {
+    var notified = false;
+
+    promise.progress(function() {
+      notified = true;
+    });
+
+    return function() {
+      return notified;
+    };
+  }
+
   beforeEach(function() {
     model = new Backbone.Model();
     model.url = '/model-cache-test';
@@ -309,8 +328,14 @@ describe('Backbone.fetchCache', function() {
   });
 
   describe('Backbone.Model', function() {
-    describe('.prototype.fetch', function() {
-      it('saves returned attributes to the attributeCache', function() {
+    describe('#fetch', function() {
+      var cacheData;
+
+      beforeEach(function() {
+        cacheData = { cheese: 'pickle' };
+      });
+
+      it('saves returned attributes to the cache', function() {
         var cacheKey = Backbone.fetchCache.getCacheKey(model);
         model.fetch({ cache: true });
         server.respond();
@@ -329,111 +354,144 @@ describe('Backbone.fetchCache', function() {
         expect(Backbone.fetchCache.setCache.calls[0].args[1]).toEqual(opts);
       });
 
-      it('returns data from the cache if cache: true is set', function() {
-        var cacheData = { cheese: 'pickle' };
+      it('sets data from the cache if cache: true is set', function() {
         Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
-        model.fetch({ cache: true });
-        expect(model.toJSON()).toEqual(cacheData);
+
+        waitsFor(promiseComplete(model.fetch({ cache: true })));
+
+        runs(function() {
+          expect(model.toJSON()).toEqual(cacheData);
+        });
       });
 
-      it('does not return cache data if cache: true is not set', function() {
-        var cacheData = { cheese: 'pickle' };
+      it('does not set cache data if cache: true is not set', function() {
         Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
 
-        model.fetch();
+        waitsFor(promiseComplete(model.fetch()));
         server.respond();
 
-        expect(model.toJSON()).not.toEqual(cacheData);
-        expect(model.toJSON()).toEqual(modelResponse);
+        runs(function() {
+          expect(model.toJSON()).not.toEqual(cacheData);
+          expect(model.toJSON()).toEqual(modelResponse);
+        });
       });
 
-      it('does not return cache data if the cache item is stale', function() {
-        var cacheData = { cheese: 'pickle' };
+      it('does not set cache data if the cache item is stale', function() {
         Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: (new Date()).getTime() - (5* 60 * 1000)
         };
 
-        model.fetch();
+        waitsFor(promiseComplete(model.fetch()));
+
         server.respond();
 
-        expect(model.toJSON()).not.toEqual(cacheData);
-        expect(model.toJSON()).toEqual(modelResponse);
+        runs(function() {
+          expect(model.toJSON()).not.toEqual(cacheData);
+          expect(model.toJSON()).toEqual(modelResponse);
+        });
       });
 
-      it('returns cache data if the item has expires: false', function() {
+      it('sets cache data if the item has expires: false', function() {
         var cacheData = { cheese: 'pickle' };
         Backbone.fetchCache._cache[model.url] = {
           value: cacheData,
           expires: false
         };
 
-        model.fetch({ cache: true });
+        waitsFor(promiseComplete(model.fetch({ cache: true })));
 
-        expect(model.toJSON()).toEqual(cacheData);
+        runs(function() {
+          expect(model.toJSON()).toEqual(cacheData);
+        });
       });
 
-      it('calls success callback on a cache hit', function() {
-        var success = jasmine.createSpy('success'),
-            cacheData = { cheese: 'pickle' };
-        Backbone.fetchCache._cache[model.url] = {
-          value: cacheData,
-          expires: (new Date()).getTime() + (5* 60 * 1000)
-        };
-
-        model.fetch({ cache: true, success: success });
-
-        expect(success).toHaveBeenCalledWith(model);
-      });
-
-      it('returns a fulfilled promise on a cache hit', function() {
-        var cacheData = { cheese: 'pickle' },
-            promise;
-        Backbone.fetchCache._cache[model.url] = {
-          value: cacheData,
-          expires: (new Date()).getTime() + (5* 60 * 1000)
-        };
-        promise = model.fetch({ cache: true });
-
-        expect(promise).toBeAPromise();
-        expect(promise).toBeResolved();
-      });
-
-      it('returns an unfulfilled promise on a cache miss', function() {
+      it('returns an unfulfilled promise', function() {
         var promise = model.fetch();
         expect(promise).toBeAPromise();
         expect(promise).toBeUnresolved();
       });
 
-      it('returns a promise with the correct context on a cache hit', function() {
-        var cacheData = { cheese: 'pickle' },
-            spy = jasmine.createSpy('success'),
-            opts = { cache: true };
+      describe('on AJAX error', function() {
+        beforeEach(function() {
+          model.url = '/non-existant';
+        });
 
-        Backbone.fetchCache._cache[model.url] = {
-          value: cacheData,
-          expires: (new Date()).getTime() + (5* 60 * 1000)
-        };
+        it('rejects the promise', function() {
+          var promise = model.fetch();
 
-        model.fetch(opts).done(spy);
+          waitsFor(promiseComplete(promise));
+          server.respond();
 
-        expect(spy).toHaveBeenCalledWith(model);
+          runs(function() {
+            expect(promise.state()).toBe('rejected');
+          });
+        });
+
+        it('calls the error callback', function() {
+          var spy = jasmine.createSpy('error');
+          var promise = model.fetch({ error: spy });
+
+          waitsFor(promiseComplete(promise));
+          server.respond();
+
+          runs(function() {
+            expect(spy).toHaveBeenCalled();
+          });
+        });
       });
 
-      it('rejects the returned promise on AJAX error', function() {
-        var spy = jasmine.createSpy('error');
+      describe('on a cache hit', function() {
+        var promise, successSpy, cacheData;
 
-        model.url = '/non-existant';
-        model.fetch().fail(spy);
-        server.respond();
+        beforeEach(function() {
+          cacheData = { cheese: 'pickle' };
+          successSpy = jasmine.createSpy('fetch success');
 
-        expect(spy).toHaveBeenCalled();
+          Backbone.fetchCache._cache[model.url] = {
+            value: cacheData,
+            expires: (new Date()).getTime() + (5* 60 * 1000),
+            success: successSpy
+          };
+          promise = model.fetch({ cache: true });
+        });
+
+        it('returns an unfulfilled promise', function() {
+          expect(promise).toBeAPromise();
+          expect(promise).toBeUnresolved();
+        });
+
+        it('fulfills the promise asynchronously', function() {
+          waitsFor(promiseComplete(promise));
+          runs(function() {
+            expect(promise).toBeResolved();
+          });
+        });
+
+        it('resolves the promise with the model instance', function() {
+          promise.done(successSpy);
+          waitsFor(promiseComplete(promise));
+          runs(function() {
+            expect(successSpy).toHaveBeenCalledWith(model);
+          });
+        });
+
+        it('calls the success callback with the model instance', function() {
+          waitsFor(promiseComplete(model.fetch({
+            cache: true,
+            success: successSpy
+          })));
+
+          runs(function() {
+            expect(successSpy).toHaveBeenCalledWith(model);
+          });
+        });
       });
 
       describe('with prefill: true option', function() {
@@ -447,37 +505,44 @@ describe('Backbone.fetchCache', function() {
           };
         });
 
-        it('sets cache data and makes an xhr request', function() {
-          model.fetch({ prefill: true });
-          expect(model.toJSON()).toEqual(cacheData);
+        it('sets cache data and then makes an xhr request', function() {
+          waitsFor(promiseNotified(model.fetch({ prefill: true })));
 
-          server.respond();
+          runs(function() {
+            expect(model.toJSON()).toEqual(cacheData);
 
-          for (var key in modelResponse) {
-            if (modelResponse.hasOwnProperty(key)) {
-              expect(model.toJSON()[key]).toEqual(modelResponse[key]);
+            server.respond();
+
+            for (var key in modelResponse) {
+              if (modelResponse.hasOwnProperty(key)) {
+                expect(model.toJSON()[key]).toEqual(modelResponse[key]);
+              }
             }
-          }
+          });
         });
 
         it('calls the prefillSuccess and success callbacks in order', function() {
           var prefillSuccess = jasmine.createSpy('prefillSuccess'),
               success = jasmine.createSpy('success');
 
-          model.fetch({
+          var promise = model.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
           });
 
-          expect(prefillSuccess.calls[0].args[0]).toEqual(model);
-          expect(prefillSuccess.calls[0].args[1]).toEqual(model.attributes);
-          expect(success).not.toHaveBeenCalled();
+          waitsFor(promiseNotified(promise));
 
-          server.respond();
+          runs(function() {
+            expect(prefillSuccess.calls[0].args[0]).toEqual(model);
+            expect(prefillSuccess.calls[0].args[1]).toEqual(model.attributes);
+            expect(success).not.toHaveBeenCalled();
 
-          expect(success.calls[0].args[0]).toEqual(model);
-          expect(success.calls[0].args[1]).toEqual(modelResponse);
+            server.respond();
+
+            expect(success.calls[0].args[0]).toEqual(model);
+            expect(success.calls[0].args[1]).toEqual(modelResponse);
+          });
         });
 
         it('triggers sync on prefill success and success', function() {
@@ -489,39 +554,49 @@ describe('Backbone.fetchCache', function() {
           model.bind('sync', sync);
           model.bind('cachesync', cachesync);
 
-          model.fetch({
+          var promise = model.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
           });
 
-          expect(sync).toHaveBeenCalled();
-          expect(sync.callCount).toEqual(1);
+          waitsFor(promiseNotified(promise));
 
-          expect(cachesync).toHaveBeenCalled();
-          expect(cachesync.callCount).toEqual(1);
+          runs(function() {
+            expect(sync).toHaveBeenCalled();
+            expect(sync.callCount).toEqual(1);
 
-          server.respond();
+            expect(cachesync).toHaveBeenCalled();
+            expect(cachesync.callCount).toEqual(1);
 
-          // Ensure cachesync was not called on this second go around
-          expect(cachesync.callCount).toEqual(1);
+            server.respond();
 
-          expect(sync).toHaveBeenCalled();
-          expect(sync.callCount).toEqual(2);
+            // Ensure cachesync was not called on this second go around
+            expect(cachesync.callCount).toEqual(1);
 
-          expect(success.calls[0].args[0]).toEqual(model);
-          expect(success.calls[0].args[1]).toEqual(modelResponse);
+            expect(sync).toHaveBeenCalled();
+            expect(sync.callCount).toEqual(2);
+
+            expect(success.calls[0].args[0]).toEqual(model);
+            expect(success.calls[0].args[1]).toEqual(modelResponse);
+          });
         });
 
         it('triggers progress on the promise on cache hit', function() {
           var progress = jasmine.createSpy('progress');
-          model.fetch({ prefill: true }).progress(progress);
-          expect(progress).toHaveBeenCalledWith(model);
+          var promise = model.fetch({ prefill: true }).progress(progress);
+
+          waitsFor(promiseNotified(promise));
+
+          runs(function() {
+            expect(progress).toHaveBeenCalledWith(model);
+          });
         });
 
         it('fulfills the promise on AJAX success', function() {
           var success = jasmine.createSpy('success');
           model.fetch({ prefill: true }).done(success);
+
           server.respond();
 
           expect(success.calls[0].args[0]).toEqual(model);
@@ -530,7 +605,7 @@ describe('Backbone.fetchCache', function() {
       });
     });
 
-    describe('.prototype.sync', function() {
+    describe('#sync', function() {
       var cacheData;
 
       beforeEach(function() {
@@ -595,8 +670,20 @@ describe('Backbone.fetchCache', function() {
   });
 
   describe('Backbone.Collection', function() {
-    describe('.prototype.fetch', function() {
-      it('saves returned attributes to the attributeCache', function() {
+    describe('#fetch', function() {
+      var cacheData;
+
+      beforeEach(function() {
+        cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
+      });
+
+      it('returns an unfulfilled promise', function() {
+        var promise = collection.fetch();
+        expect(promise).toBeAPromise();
+        expect(promise).toBeUnresolved();
+      });
+
+      it('saves returned attributes to the cache', function() {
         collection.fetch({ cache: true });
         server.respond();
         expect(Backbone.fetchCache._cache[collection.url].value)
@@ -614,18 +701,22 @@ describe('Backbone.fetchCache', function() {
         expect(Backbone.fetchCache.setCache.calls[0].args[1]).toEqual(opts);
       });
 
-      it('returns data from the cache if cache: true is set', function() {
-        var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
+      it('sets data cache data if cache: true is set', function() {
         Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
         };
-        collection.fetch({ cache: true });
-        expect(collection.toJSON()).toEqual(cacheData);
+
+        waitsFor(promiseComplete(collection.fetch({
+          cache: true
+        })));
+
+        runs(function() {
+          expect(collection.toJSON()).toEqual(cacheData);
+        });
       });
 
-      it('does not return cache data if cache: true is not set', function() {
-        var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
+      it('does not set cache data if cache: true is not set', function() {
         Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() + (5* 60 * 1000)
@@ -638,8 +729,7 @@ describe('Backbone.fetchCache', function() {
         expect(collection.toJSON()).toEqual(collectionResponse);
       });
 
-      it('does not return cache data if the cache item is stale', function() {
-        var cacheData = { cheese: 'pickle' };
+      it('does not set cache data if the cache item is stale', function() {
         Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: (new Date()).getTime() - (5* 60 * 1000)
@@ -652,111 +742,126 @@ describe('Backbone.fetchCache', function() {
         expect(collection.toJSON()).toEqual(collectionResponse);
       });
 
-      it('returns cache data if the item has expires: false', function() {
-        var cacheData = [{ cheese: 'pickle' }];
+      it('sets cache data if the item has expires: false', function() {
         Backbone.fetchCache._cache[collection.url] = {
           value: cacheData,
           expires: false
         };
 
-        collection.fetch({ cache: true });
+        waitsFor(promiseComplete(collection.fetch({
+          cache: true
+        })));
 
-        expect(collection.toJSON()).toEqual(cacheData);
+        runs(function() {
+          expect(collection.toJSON()).toEqual(cacheData);
+        });
       });
 
-      it('calls set according to options on a cache hit', function() {
-        var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
-            options = { cache: true, remove: false };
+      describe('on AJAX error', function() {
+        beforeEach(function() {
+          collection.url = '/non-existant';
+        });
 
-        spyOn(collection, 'set');
-        Backbone.fetchCache._cache[collection.url] = {
-          value: cacheData,
-          expires: (new Date()).getTime() + (5* 60 * 1000)
-        };
+        it('rejects the promise', function() {
+          var promise = collection.fetch();
 
-        collection.fetch(options);
+          waitsFor(promiseComplete(promise));
+          server.respond();
 
-        expect(collection.set).toHaveBeenCalledWith(cacheData, options);
+          runs(function() {
+            expect(promise.state()).toBe('rejected');
+          });
+        });
+
+        it('calls the error callback', function() {
+          var spy = jasmine.createSpy('error');
+          var promise = collection.fetch({ error: spy });
+
+          waitsFor(promiseComplete(promise));
+          server.respond();
+
+          runs(function() {
+            expect(spy).toHaveBeenCalled();
+          });
+        });
       });
 
-      it('calls reset according to options on a cache hit', function() {
-        var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
-            options = { cache: true, reset: true };
+      describe('on cache hit', function() {
+        it('returns an unfulfilled promise', function() {
+          var promise = collection.fetch({ cache: true });
+          expect(promise).toBeAPromise();
+          expect(promise).toBeUnresolved();
+        });
 
-        spyOn(collection, 'reset');
-        Backbone.fetchCache._cache[collection.url] = {
-          value: cacheData,
-          expires: (new Date()).getTime() + (5* 60 * 1000)
-        };
+        it('calls set according to options', function() {
+          var options = { cache: true, remove: false };
 
-        collection.fetch(options);
+          spyOn(collection, 'set');
+          Backbone.fetchCache._cache[collection.url] = {
+            value: cacheData,
+            expires: (new Date()).getTime() + (5* 60 * 1000)
+          };
 
-        expect(collection.reset).toHaveBeenCalledWith(cacheData, options);
-      });
+          waitsFor(promiseComplete(collection.fetch(options)));
 
-      it('calls success callback on a cache hit', function() {
-        var success = jasmine.createSpy('success'),
-            cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }];
+          runs(function() {
+            expect(collection.set).toHaveBeenCalledWith(cacheData, options);
+          });
+        });
 
-        Backbone.fetchCache._cache[collection.url] = {
-          value: cacheData,
-          expires: (new Date()).getTime() + (5* 60 * 1000)
-        };
+        it('calls reset according to options', function() {
+          var options = { cache: true, reset: true };
 
-        collection.fetch({ cache: true, success: success });
+          spyOn(collection, 'reset');
+          Backbone.fetchCache._cache[collection.url] = {
+            value: cacheData,
+            expires: (new Date()).getTime() + (5* 60 * 1000)
+          };
 
-        expect(success).toHaveBeenCalledWith(collection);
-      });
+          waitsFor(promiseComplete(collection.fetch(options)));
 
-      it('returns a fulfilled promise on a cache hit', function() {
-        var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
-            promise;
+          runs(function() {
+            expect(collection.reset).toHaveBeenCalledWith(cacheData, options);
+          });
+        });
 
-        Backbone.fetchCache._cache[collection.url] = {
-          value: cacheData,
-          expires: (new Date()).getTime() + (5* 60 * 1000)
-        };
-        promise = collection.fetch({ cache: true });
+        it('fulfills the promise with the collection instance', function() {
+          var spy = jasmine.createSpy('success');
 
-        expect(promise).toBeAPromise();
-        expect(promise).toBeResolved();
-      });
+          Backbone.fetchCache._cache[collection.url] = {
+            value: cacheData,
+            expires: (new Date()).getTime() + (5* 60 * 1000)
+          };
 
-      it('returns an unfulfilled promise on a cache miss', function() {
-        var promise = collection.fetch();
-        expect(promise).toBeAPromise();
-        expect(promise).toBeUnresolved();
-      });
+          var promise = collection.fetch({ cache: true }).done(spy);
 
-      it('returns a promise with the correct context on a cache hit', function() {
-        var cacheData = [{ cheese: 'pickle' }, { salt: 'vinegar' }],
-            spy = jasmine.createSpy('success');
+          waitsFor(promiseComplete(promise));
+          runs(function() {
+            expect(spy).toHaveBeenCalledWith(collection);
+          });
+        });
 
-        Backbone.fetchCache._cache[collection.url] = {
-          value: cacheData,
-          expires: (new Date()).getTime() + (5* 60 * 1000)
-        };
+        it('calls success callback with the collection instance', function() {
+          var success = jasmine.createSpy('success');
 
-        collection.fetch({ cache: true }).done(spy);
+          Backbone.fetchCache._cache[collection.url] = {
+            value: cacheData,
+            expires: (new Date()).getTime() + (5* 60 * 1000)
+          };
 
-        expect(spy).toHaveBeenCalledWith(collection);
-      });
+          waitsFor(promiseComplete(collection.fetch({
+            cache: true,
+            success: success
+          })));
 
-      it('rejects the returned promise on AJAX error', function() {
-        var spy = jasmine.createSpy('error');
-
-        collection.url = '/non-existant';
-        collection.fetch().fail(spy);
-        server.respond();
-
-        expect(spy).toHaveBeenCalled();
+          runs(function() {
+            expect(success).toHaveBeenCalledWith(collection);
+          });
+        });
       });
 
       describe('with prefill: true option', function() {
-        var cacheData;
-
         beforeEach(function(){
-          cacheData = [{ cheese: 'pickle' }];
           Backbone.fetchCache._cache[collection.url] = {
             value: cacheData,
             expires: (new Date()).getTime() + (5* 60 * 1000)
@@ -764,31 +869,36 @@ describe('Backbone.fetchCache', function() {
         });
 
         it('sets cache data and makes an xhr request', function() {
-          collection.fetch({ prefill: true });
-          expect(collection.toJSON()).toEqual(cacheData);
+          waitsFor(promiseNotified(collection.fetch({ prefill: true })));
 
-          server.respond();
+          runs(function() {
+            expect(collection.toJSON()).toEqual(cacheData);
 
-          expect(collection.toJSON()).toEqual(collectionResponse);
+            server.respond();
+
+            expect(collection.toJSON()).toEqual(collectionResponse);
+          });
         });
 
         it('calls the prefillSuccess and success callbacks in order', function() {
           var prefillSuccess = jasmine.createSpy('prefillSuccess'),
               success = jasmine.createSpy('success');
 
-          collection.fetch({
+          waitsFor(promiseNotified(collection.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
+          })));
+
+          runs(function() {
+            expect(prefillSuccess.calls[0].args[0]).toEqual(collection);
+            expect(prefillSuccess.calls[0].args[1]).toEqual(collection.attributes);
+            expect(success).not.toHaveBeenCalled();
+
+            server.respond();
+            expect(success.calls[0].args[0]).toEqual(collection);
+            expect(success.calls[0].args[1]).toEqual(collectionResponse);
           });
-
-          expect(prefillSuccess.calls[0].args[0]).toEqual(collection);
-          expect(prefillSuccess.calls[0].args[1]).toEqual(collection.attributes);
-          expect(success).not.toHaveBeenCalled();
-
-          server.respond();
-          expect(success.calls[0].args[0]).toEqual(collection);
-          expect(success.calls[0].args[1]).toEqual(collectionResponse);
         });
 
         it('triggers sync on prefill success and success', function() {
@@ -800,34 +910,41 @@ describe('Backbone.fetchCache', function() {
           collection.bind('sync', sync);
           collection.bind('cachesync', cachesync);
 
-          collection.fetch({
+          waitsFor(promiseNotified(collection.fetch({
             prefill: true,
             success: success,
             prefillSuccess: prefillSuccess
+          })));
+
+          runs(function() {
+            expect(sync).toHaveBeenCalled();
+            expect(sync.callCount).toEqual(1);
+
+            expect(cachesync).toHaveBeenCalled();
+            expect(cachesync.callCount).toEqual(1);
+
+            server.respond();
+
+            // Ensure cachesync was not called on this second go around
+            expect(cachesync.callCount).toEqual(1);
+
+            expect(sync).toHaveBeenCalled();
+            expect(sync.callCount).toEqual(2);
+
+            expect(success.calls[0].args[0]).toEqual(collection);
+            expect(success.calls[0].args[1]).toEqual(collectionResponse);
           });
-
-          expect(sync).toHaveBeenCalled();
-          expect(sync.callCount).toEqual(1);
-
-          expect(cachesync).toHaveBeenCalled();
-          expect(cachesync.callCount).toEqual(1);
-
-          server.respond();
-
-          // Ensure cachesync was not called on this second go around
-          expect(cachesync.callCount).toEqual(1);
-
-          expect(sync).toHaveBeenCalled();
-          expect(sync.callCount).toEqual(2);
-
-          expect(success.calls[0].args[0]).toEqual(collection);
-          expect(success.calls[0].args[1]).toEqual(collectionResponse);
         });
 
         it('triggers progress on the promise on cache hit', function() {
           var progress = jasmine.createSpy('progeress');
-          collection.fetch({ prefill: true }).progress(progress);
-          expect(progress).toHaveBeenCalledWith(collection);
+          var promise = collection.fetch({ prefill: true }).progress(progress);
+
+          waitsFor(promiseNotified(promise));
+
+          runs(function() {
+            expect(progress).toHaveBeenCalledWith(collection);
+          });
         });
 
         it('fulfills the promise on AJAX success', function() {

@@ -23,6 +23,8 @@
     "expect": true,
     "spyOn": true,
     "jasmine": true,
-    "sinon": true
+    "sinon": true,
+    "waitsFor": true,
+    "runs": true
   }
 }

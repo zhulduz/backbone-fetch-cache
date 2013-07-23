@@ -179,17 +179,3 @@ The default grunt task runs tests and lints the code.
 ```
 $ grunt
 ```
-
-## Changelog
-
-- v0.1.11: Account for custom URLs to be passed in fetch method options - thanks to [@dincho](https://github.com/dincho)
-- v0.1.10: Add getCacheKey function to allow custom cache keys - thanks to [@ebertti](https://github.com/ebertti)
-- v0.1.9: Fixes a bug where clearing a cache item didn't get persisted to localStorage - thanks to [@mzafer](https://github.com/mzafer)
-- v0.1.8: Trigger `sync` and `cachesync` events - thanks to [@victorquinn](https://github.com/victorquinn).
-- v0.1.7: Ensures that `parse` is called for collections - thanks to [@fernandopg](https://github.com/fernandopg).
-- v0.1.6: Update to call the correct `add` and `reset` methods for collections - thanks to [@mzafer](https://github.com/mzafer).
-- v0.1.5: Attempt to clear cache keys on PUT/POST/DELETE
-- v0.1.4: Bug fix for older Webkits which throw an error trying to JSON.parse(null)
-- v0.1.3: Auto expiration of old cache items if `locaStorage` gets full - thanks to [@inf0rmer](https://github.com/inf0rmer).
-- v0.1.2: Add AMD support.
-- v0.1.1: Add `prefetch` option.

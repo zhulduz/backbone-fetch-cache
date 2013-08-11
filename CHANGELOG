@@ -1,5 +1,6 @@
 Changelog
 
+- v1.0.1: Bugfix - updates fetch success callback signature to match Backbone's - thanks to [@ydaniv](https://github.com/ydaniv)
 - v1.0.0: Perform all cache fulfilment asynchronously. Only the promise, not the full $.Deferred object is returned from fetch functions.
 
 - v0.1.11: Account for custom URLs to be passed in fetch method options - thanks to [@dincho](https://github.com/dincho)

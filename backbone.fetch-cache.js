@@ -157,7 +157,7 @@
         if (opts.prefill) { deferred.notify(self); }
         // ...finish and return if we're not
         else {
-          if (_.isFunction(opts.success)) { opts.success(self); }
+          if (_.isFunction(opts.success)) { opts.success(self, attributes, opts); }
           deferred.resolve(self);
         }
       });
@@ -236,7 +236,7 @@
         if (opts.prefill) { deferred.notify(self); }
         // ...finish and return if we're not
         else {
-          if (_.isFunction(opts.success)) { opts.success(self); }
+          if (_.isFunction(opts.success)) { opts.success(self, attributes, opts); }
           deferred.resolve(self);
         }
       });

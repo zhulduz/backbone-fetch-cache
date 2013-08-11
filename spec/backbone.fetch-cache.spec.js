@@ -482,14 +482,16 @@ describe('Backbone.fetchCache', function() {
           });
         });
 
-        it('calls the success callback with the model instance', function() {
-          waitsFor(promiseComplete(model.fetch({
+        it('calls the success callback with the model instance, response data and fetch options', function() {
+          var options = {
             cache: true,
             success: successSpy
-          })));
+          };
+
+          waitsFor(promiseComplete(model.fetch(options)));
 
           runs(function() {
-            expect(successSpy).toHaveBeenCalledWith(model);
+            expect(successSpy).toHaveBeenCalledWith(model, cacheData, options);
           });
         });
       });
@@ -841,21 +843,22 @@ describe('Backbone.fetchCache', function() {
           });
         });
 
-        it('calls success callback with the collection instance', function() {
+        it('calls success callback with the collection instance, response data and fetch options', function() {
           var success = jasmine.createSpy('success');
+          var options = {
+            cache: true,
+            success: success
+          };
 
           Backbone.fetchCache._cache[collection.url] = {
             value: cacheData,
             expires: (new Date()).getTime() + (5* 60 * 1000)
           };
-
-          waitsFor(promiseComplete(collection.fetch({
-            cache: true,
-            success: success
-          })));
+            
+          waitsFor(promiseComplete(collection.fetch(options)));
 
           runs(function() {
-            expect(success).toHaveBeenCalledWith(collection);
+            expect(success).toHaveBeenCalledWith(collection, cacheData, options);
           });
         });
       });

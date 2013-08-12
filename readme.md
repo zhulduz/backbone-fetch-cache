@@ -123,7 +123,7 @@ This can be overridden with custom logic if required:
 // Instance is a Backbone.Model or Backbone.Collection, options are passed
 // through form the fetch call
 Backbone.fetchCache.getCacheKey = function(instance, options) {
-  return instance.constructor.name + ':' + instamce.get('id');
+  return instance.constructor.name + ':' + instance.get('id');
   // => UserModel:1
 };
 ```

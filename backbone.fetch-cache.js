@@ -23,7 +23,7 @@
     modelSync: Backbone.Model.prototype.sync,
     collectionFetch: Backbone.Collection.prototype.fetch
   },
-  supportLocalStorage = function() {
+  supportLocalStorage = (function() {
     var supported = typeof window.localStorage !== 'undefined';
     if (supported) {
       try {
@@ -36,7 +36,7 @@
       }
     }
     return supported;
-  }();
+  })();
 
   Backbone.fetchCache = (Backbone.fetchCache || {});
   Backbone.fetchCache._cache = (Backbone.fetchCache._cache || {});

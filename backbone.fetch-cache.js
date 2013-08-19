@@ -23,7 +23,20 @@
     modelSync: Backbone.Model.prototype.sync,
     collectionFetch: Backbone.Collection.prototype.fetch
   },
-  supportLocalStorage = typeof window.localStorage !== 'undefined';
+  supportLocalStorage = function() {
+    var supported = typeof window.localStorage !== 'undefined';
+    if (supported) {
+      try {
+        // impossible to write on some platforms when private browsing is on and
+        // throws an exception = local storage not supported.
+        localStorage.setItem("test_support", "test_support");
+        localStorage.removeItem("test_support");
+      } catch (e) {
+        supported = false;
+      }
+    }
+    return supported;
+  }();
 
   Backbone.fetchCache = (Backbone.fetchCache || {});
   Backbone.fetchCache._cache = (Backbone.fetchCache._cache || {});

@@ -8,14 +8,14 @@
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module and set browser global
-    define(['underscore', 'backbone'], function (_, Backbone) {
-      return (root.Backbone = factory(_, Backbone));
+    define(['underscore', 'backbone', 'jquery'], function (_, Backbone, $) {
+      return (root.Backbone = factory(_, Backbone, $));
     });
   } else {
     // Browser globals
-    root.Backbone = factory(root._, root.Backbone,root.jQuery);
+    root.Backbone = factory(root._, root.Backbone, root.jQuery);
   }
-}(this, function (_, Backbone,$) {
+}(this, function (_, Backbone, $) {
 
   // Setup
   var superMethods = {

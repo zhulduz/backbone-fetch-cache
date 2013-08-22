@@ -13,9 +13,9 @@
     });
   } else {
     // Browser globals
-    root.Backbone = factory(root._, root.Backbone);
+    root.Backbone = factory(root._, root.Backbone,root.jQuery);
   }
-}(this, function (_, Backbone) {
+}(this, function (_, Backbone,$) {
 
   // Setup
   var superMethods = {

@@ -156,8 +156,9 @@
     }
 
     if (!expired && (opts.cache || opts.prefill) && attributes) {
-      // Ensure that cache resolution is asynchronous
-      nextTick(function() {
+      // Ensure that cache resolution is dependent on the async option, defaults to true.
+      if (typeof opts.async === "undefined") opts.async = true;
+      var updateFn = function() {
 
         self.set(self.parse(attributes), opts);
         if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(self, attributes, opts); }
@@ -173,7 +174,8 @@
           if (_.isFunction(opts.success)) { opts.success(self, attributes, opts); }
           deferred.resolve(self);
         }
-      });
+      }
+      opts.async ? nextTick(updateFn) : updateFn();
 
       if (!opts.prefill) {
         return deferred.promise();
@@ -235,8 +237,9 @@
     }
 
     if (!expired && (opts.cache || opts.prefill) && attributes) {
-      // Ensure that cache resolution is asynchronous
-      nextTick(function() {
+      // Ensure that cache resolution is dependent on the async option, defaults to true.
+      if (typeof opts.async === "undefined") opts.async = true;
+      var updateFn = function() {
 
         self[opts.reset ? 'reset' : 'set'](self.parse(attributes), opts);
         if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(self); }
@@ -252,7 +255,8 @@
           if (_.isFunction(opts.success)) { opts.success(self, attributes, opts); }
           deferred.resolve(self);
         }
-      });
+      }
+      opts.async ? nextTick(updateFn) : updateFn();
 
       if (!opts.prefill) {
         return deferred.promise();

@@ -605,6 +605,18 @@ describe('Backbone.fetchCache', function() {
           expect(success.calls[0].args[1]).toEqual(modelResponse);
         });
       });
+
+      describe('with async: false option', function() {
+        it('resolves synchronously', function() {
+          Backbone.fetchCache._cache[model.url] = {
+            value: cacheData,
+            expires: (new Date()).getTime() + (5* 60 * 1000)
+          };
+
+          model.fetch({ cache: true, async: false });
+          expect(model.toJSON()).toEqual(cacheData);
+        });
+      });
     });
 
     describe('#sync', function() {
@@ -854,7 +866,7 @@ describe('Backbone.fetchCache', function() {
             value: cacheData,
             expires: (new Date()).getTime() + (5* 60 * 1000)
           };
-            
+
           waitsFor(promiseComplete(collection.fetch(options)));
 
           runs(function() {

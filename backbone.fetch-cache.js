@@ -149,6 +149,23 @@
         deferred = new $.Deferred(),
         self = this;
 
+    function setData() {
+      self.set(self.parse(attributes), opts);
+      if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(self, attributes, opts); }
+
+      // Trigger sync events
+      self.trigger('cachesync', self, attributes, opts);
+      self.trigger('sync', self, attributes, opts);
+
+      // Notify progress if we're still waiting for an AJAX call to happen...
+      if (opts.prefill) { deferred.notify(self); }
+      // ...finish and return if we're not
+      else {
+        if (_.isFunction(opts.success)) { opts.success(self, attributes, opts); }
+        deferred.resolve(self);
+      }
+    }
+
     if (data) {
       expired = data.expires;
       expired = expired && data.expires < (new Date()).getTime();
@@ -156,26 +173,14 @@
     }
 
     if (!expired && (opts.cache || opts.prefill) && attributes) {
-      // Ensure that cache resolution is dependent on the async option, defaults to true.
-      if (typeof opts.async === "undefined") opts.async = true;
-      var updateFn = function() {
+      // Ensure that cache resolution adhers to async option, defaults to true.
+      if (opts.async == null) { opts.async = true; }
 
-        self.set(self.parse(attributes), opts);
-        if (_.isFunction(opts.prefillSuccess)) { opts.prefillSuccess(self, attributes, opts); }
-
-        // Trigger sync events
-        self.trigger('cachesync', self, attributes, opts);
-        self.trigger('sync', self, attributes, opts);
-
-        // Notify progress if we're still waiting for an AJAX call to happen...
-        if (opts.prefill) { deferred.notify(self); }
-        // ...finish and return if we're not
-        else {
-          if (_.isFunction(opts.success)) { opts.success(self, attributes, opts); }
-          deferred.resolve(self);
-        }
+      if (opts.async) {
+        nextTick(setData);
+      } else {
+        setData();
       }
-      opts.async ? nextTick(updateFn) : updateFn();
 
       if (!opts.prefill) {
         return deferred.promise();

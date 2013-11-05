@@ -975,11 +975,13 @@ describe('Backbone.fetchCache', function() {
   });
   describe('Prefix', function() {
     beforeEach(function() {
-      Backbone.fetchCache.prefixToLocalStorage = "first_user";
+      Backbone.fetchCache.getLocalStorageKey = function() {
+        return 'backboneCache_user1';
+      };
     });
 
     it('get prefix', function() {
-      expect(Backbone.fetchCache.prefixToLocalStorage).toEqual('first_user');
+      expect(Backbone.fetchCache.getLocalStorageKey()).toEqual('backboneCache_user1');
     });
 
     it('set localStorage', function() {
@@ -988,7 +990,7 @@ describe('Backbone.fetchCache', function() {
         '/url2': { expires: false, value: { egg: 'roll' } }
       };
       Backbone.fetchCache.setLocalStorage();
-      expect(localStorage.getItem('backboneCache_first_user')).toEqual(JSON.stringify(cache));
+      expect(localStorage.getItem('backboneCache_user1')).toEqual(JSON.stringify(cache));
     });
 
     it('get localStorage', function() {
@@ -996,21 +998,23 @@ describe('Backbone.fetchCache', function() {
         '/url1': { expires: false, value: { bacon: 'sandwich' } },
         '/url2': { expires: false, value: { egg: 'roll' } }
       };
-      localStorage.setItem('backboneCache_first_user', JSON.stringify(cache));
+      localStorage.setItem('backboneCache_user1', JSON.stringify(cache));
       Backbone.fetchCache.getLocalStorage();
       expect(Backbone.fetchCache._cache).toEqual(cache);
     });
 
     it('get localStorage for several users', function() {
-      Backbone.fetchCache.prefixToLocalStorage = "second_user";
+      Backbone.fetchCache.getLocalStorageKey = function() {
+        return 'backboneCache_user2';
+      };
       var cache = Backbone.fetchCache._cache = {
         '/url1': { expires: true, value: { vegetables: 'tomato' } },
         '/url2': { expires: true, value: { egg: 'roll' } }
       };
-      localStorage.setItem('backboneCache_first_user', '');
+      localStorage.setItem('backboneCache_user1', '');
       Backbone.fetchCache.setLocalStorage();
-      expect(localStorage.getItem('backboneCache_second_user')).toEqual(JSON.stringify(cache));
-      expect(localStorage.getItem('backboneCache_first_user')).toEqual('');
+      expect(localStorage.getItem('backboneCache_user2')).toEqual(JSON.stringify(cache));
+      expect(localStorage.getItem('backboneCache_user1')).toEqual('');
     });
   });
 });
